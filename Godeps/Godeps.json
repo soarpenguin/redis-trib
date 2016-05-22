@@ -1,0 +1,17 @@
+{
+	"ImportPath": "github.com/soarpenguin/redis-trib",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v70",
+	"Deps": [
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.10.0-16-gcd7d1bb",
+			"Rev": "cd7d1bbe41066b6c1f19780f895901052150a575"
+		},
+		{
+			"ImportPath": "github.com/codegangsta/cli",
+			"Comment": "v1.17.0-25-gbebbcf6",
+			"Rev": "bebbcf6d41ebde6db3940e63426b8ebcefca23c8"
+		}
+	]
+}
