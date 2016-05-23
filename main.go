@@ -49,7 +49,17 @@ func main() {
 		},
 	}
 	app.Commands = []cli.Command{
+		addNodeCommand,
+		callCommand,
+		checkCommand,
 		createCommand,
+		delNodeCommand,
+		fixCommand,
+		importCommand,
+		infoCommand,
+		rebalanceCommand,
+		reshardCommand,
+		setTimeoutCommand,
 	}
 	app.Before = func(context *cli.Context) error {
 		if context.GlobalBool("debug") {
