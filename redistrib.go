@@ -71,7 +71,7 @@ func (self *RedisTrib) ShowNodes() {
 }
 
 func (self *RedisTrib) CheckCluster(quiet bool) {
-	logrus.Printf(">>> Performing Cluster Check (using node).")
+	logrus.Printf(">>> Performing Cluster Check (using node %s).", self.nodes[0].String())
 
 	if !quiet {
 		self.ShowNodes()
@@ -80,8 +80,6 @@ func (self *RedisTrib) CheckCluster(quiet bool) {
 	self.CheckConfigConsistency()
 	self.CheckOpenSlots()
 	self.CheckSlotsCoverage()
-	//check_slots_coverage
-	return
 }
 
 func (self *RedisTrib) CheckConfigConsistency() {
