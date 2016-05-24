@@ -37,11 +37,11 @@ func main() {
 			Name:  "debug",
 			Usage: "enable debug output for logging",
 		},
-		cli.StringFlag{
-			Name:  "log",
-			Value: "/dev/null",
-			Usage: "set the log file path where internal debug information is written",
-		},
+		//cli.StringFlag{
+		//	Name:  "log",
+		//	Value: "/dev/null",
+		//	Usage: "set the log file path where internal debug information is written",
+		//},
 		cli.StringFlag{
 			Name:  "log-format",
 			Value: "text",
@@ -65,13 +65,13 @@ func main() {
 		if context.GlobalBool("debug") {
 			logrus.SetLevel(logrus.DebugLevel)
 		}
-		if path := context.GlobalString("log"); path != "" {
-			f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_SYNC, 0666)
-			if err != nil {
-				return err
-			}
-			logrus.SetOutput(f)
-		}
+		//if path := context.GlobalString("log"); path != "" {
+		//	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_SYNC, 0666)
+		//	if err != nil {
+		//		return err
+		//	}
+		//	logrus.SetOutput(f)
+		//}
 		switch context.GlobalString("log-format") {
 		case "text":
 			// retain logrus's default.

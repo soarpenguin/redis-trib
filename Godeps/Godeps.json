@@ -14,20 +14,18 @@
 			"Rev": "bebbcf6d41ebde6db3940e63426b8ebcefca23c8"
 		},
 		{
-			"ImportPath": "github.com/gosexy/redis",
-			"Rev": "19c427d2a3bc8b8cdbb2cbb8f313ed141cb78096"
+			"ImportPath": "github.com/garyburd/redigo/internal",
+			"Comment": "v1.0.0",
+			"Rev": "8873b2f1995f59d4bcdd2b0dc9858e2cb9bf0c13"
 		},
 		{
-			"ImportPath": "github.com/xiam/resp",
-			"Rev": "04b037c5d609117402713f2842683bd7f3010795"
+			"ImportPath": "github.com/garyburd/redigo/redis",
+			"Comment": "v1.0.0",
+			"Rev": "8873b2f1995f59d4bcdd2b0dc9858e2cb9bf0c13"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",
 			"Rev": "833a04a10549a95dc34458c195cbad61bbb6cb4d"
-		},
-		{
-			"ImportPath": "menteslibres.net/gosexy/to",
-			"Rev": "c20e083e31230b84ffa23c5d2fb0bc55f5292681"
 		}
 	]
 }
