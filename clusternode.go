@@ -8,8 +8,8 @@ import (
 	"strings"
 	//"time"
 
-	"github.com/Sirupsen/logrus"
 	//"github.com/gosexy/redis"
+	"github.com/Sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
 )
 
@@ -87,6 +87,10 @@ func (self *ClusterNode) Friends() []*NodeInfo {
 	return self.friends
 }
 
+func (self *ClusterNode) Replicas() []*ClusterNode {
+	return self.replicas
+}
+
 func (self *ClusterNode) Slots() map[int]int {
 	return self.info.slots
 }
@@ -99,8 +103,8 @@ func (self *ClusterNode) Importing() map[int]string {
 	return self.info.importing
 }
 
-func (self *ClusterNode) Replicas() []*ClusterNode {
-	return self.replicas
+func (self *ClusterNode) Name() string {
+	return self.info.name
 }
 
 func (self *ClusterNode) AddReplicasNode(node *ClusterNode) {
@@ -157,6 +161,10 @@ func (self *ClusterNode) Call(cmd string, args ...interface{}) (interface{}, err
 	}
 
 	return self.r.Do(cmd, args...)
+}
+
+func (self *ClusterNode) Dbsize() (int, error) {
+	return redis.Int(self.Call("DBSIZE"))
 }
 
 func (self *ClusterNode) AssertCluster() bool {

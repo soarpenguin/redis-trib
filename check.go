@@ -3,6 +3,8 @@
 package main
 
 import (
+	"errors"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 )
@@ -27,4 +29,17 @@ var checkCommand = cli.Command{
 		}
 		return nil
 	},
+}
+
+func (self *RedisTrib) CheckClusterCmd(addr string) error {
+	if addr == "" {
+		return errors.New("Please check host:port for check command.")
+	}
+
+	if err := self.LoadClusterInfoFromNode(addr); err != nil {
+		return err
+	}
+
+	self.CheckCluster(false)
+	return nil
 }

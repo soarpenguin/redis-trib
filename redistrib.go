@@ -233,15 +233,24 @@ func (self *RedisTrib) PopulateNodesReplicasInfo() {
 	}
 }
 
-func (self *RedisTrib) CheckClusterCmd(addr string) error {
-	if addr == "" {
-		return errors.New("Please check host:port for check command.")
+func (self *RedisTrib) ShowClusterInfo() {
+	masters := 0
+	keys := 0
+
+	for _, node := range self.nodes {
+		if node.HasFlag("master") {
+			dbsize, err := node.Dbsize()
+			if err != nil {
+				dbsize = 0
+			}
+			logrus.Printf("%s (%s...) -> %-5d keys | %d slots | %d slaves.",
+				node.String(), node.Name()[0:8], dbsize, len(node.Slots()), len(node.Replicas()))
+			masters += 1
+			keys += dbsize
+		}
 	}
 
-	if err := self.LoadClusterInfoFromNode(addr); err != nil {
-		return err
-	}
-
-	self.CheckCluster(false)
-	return nil
+	logrus.Printf("[OK] %d keys in %d masters.", keys, masters)
+	kpslot := float64(keys) / 16384.0
+	logrus.Printf("%.2f keys per slot on average.", kpslot)
 }
