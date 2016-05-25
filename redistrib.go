@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -91,12 +92,66 @@ func (self *RedisTrib) CheckConfigConsistency() {
 }
 
 func (self *RedisTrib) isConfigConsistent() bool {
-	return true
+	clean := true
+	oldSig := ""
+	for _, node := range self.nodes {
+		if len(oldSig) == 0 {
+			oldSig = node.GetConfigSignature()
+		} else {
+			newSig := node.GetConfigSignature()
+			if oldSig != newSig {
+				logrus.Errorf("Signatures don't match. Error in Config.")
+				logrus.Errorf("Error came up when checking node %s", node.String())
+				clean = false
+				break
+			}
+		}
+	}
+	return clean
 }
 
 func (self *RedisTrib) CheckOpenSlots() {
 	logrus.Printf(">>> Check for open slots...")
 	// add check open slots code.
+	var openSlots []string
+
+	for _, node := range self.nodes {
+		if len(node.Migrating()) > 0 {
+			keys := make([]string, len(node.Migrating()))
+			for k, _ := range node.Migrating() {
+				keys = append(keys, strconv.Itoa(k))
+			}
+			self.ClusterError(fmt.Sprintf("Node %s has slots in migrating state (%s).",
+				node.String(), strings.Join(keys, ",")))
+			openSlots = append(openSlots, keys...)
+		}
+		if len(node.Importing()) > 0 {
+			keys := make([]string, len(node.Importing()))
+			for k, _ := range node.Importing() {
+				keys = append(keys, strconv.Itoa(k))
+			}
+			self.ClusterError(fmt.Sprintf("Node %s has slots in importing state (%s).",
+				node.String(), strings.Join(keys, ",")))
+			openSlots = append(openSlots, keys...)
+		}
+	}
+	uniq := Uniq(openSlots)
+	if len(uniq) > 0 {
+		logrus.Warnf("The following slots are open: %s", strings.Join(uniq, ", "))
+	}
+	if self.fix {
+		for _, slot := range uniq {
+			self.FixOpenSlot(slot)
+		}
+	}
+}
+
+// Slot 'slot' was found to be in importing or migrating state in one or
+// more nodes. This function fixes this condition by migrating keys where
+// it seems more sensible.
+func (self *RedisTrib) FixOpenSlot(slot string) {
+	logrus.Printf(">>> Fixing open slot %s", slot)
+	// add fix open slot code here
 }
 
 func (self *RedisTrib) CheckSlotsCoverage() {
@@ -115,13 +170,19 @@ func (self *RedisTrib) CheckSlotsCoverage() {
 // to ClusterHashSlots, then all slots are served.
 func (self *RedisTrib) CoveredSlots() map[int]int {
 	slots := make(map[int]int)
+
+	for _, node := range self.nodes {
+		for key, value := range node.Slots() {
+			slots[key] = value
+		}
+	}
 	return slots
 }
 
 func (self *RedisTrib) LoadClusterInfoFromNode(addr string) error {
 	node := NewClusterNode(addr)
 
-	if err := node.Connect(); err != nil {
+	if err := node.Connect(true); err != nil {
 		return err
 	}
 
@@ -142,7 +203,7 @@ func (self *RedisTrib) LoadClusterInfoFromNode(addr string) error {
 		//}
 
 		fnode := NewClusterNode(n.String())
-		fnode.Connect()
+		fnode.Connect(false)
 		if fnode.R() == nil {
 			continue
 		}
@@ -167,6 +228,7 @@ func (self *RedisTrib) PopulateNodesReplicasInfo() {
 				logrus.Warnf("*** %s claims to be slave of unknown node ID %s.", node.String(), node.Replicate())
 			}
 			// append master to node.replicate array
+			master.AddReplicasNode(node)
 		}
 	}
 }

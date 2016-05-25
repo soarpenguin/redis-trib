@@ -18,6 +18,8 @@ const (
 	NewHashSlot
 )
 
+///////////////////////////////////////////////////////////
+// detail info for redis node.
 type NodeInfo struct {
 	host string
 	port uint
@@ -47,12 +49,14 @@ func (self *NodeInfo) String() string {
 	return fmt.Sprintf("%s:%d", self.host, self.port)
 }
 
+//////////////////////////////////////////////////////////
+// struct of redis cluster node.
 type ClusterNode struct {
 	r        redis.Conn
 	info     *NodeInfo
 	dirty    bool
 	friends  [](*NodeInfo)
-	replicas [](*NodeInfo)
+	replicas [](*ClusterNode)
 }
 
 func NewClusterNode(addr string) (node *ClusterNode) {
@@ -87,6 +91,22 @@ func (self *ClusterNode) Slots() map[int]int {
 	return self.info.slots
 }
 
+func (self *ClusterNode) Migrating() map[int]string {
+	return self.info.migrating
+}
+
+func (self *ClusterNode) Importing() map[int]string {
+	return self.info.importing
+}
+
+func (self *ClusterNode) Replicas() []*ClusterNode {
+	return self.replicas
+}
+
+func (self *ClusterNode) AddReplicasNode(node *ClusterNode) {
+	self.replicas = append(self.replicas, node)
+}
+
 func (self *ClusterNode) HasFlag(flag string) bool {
 	for _, f := range self.info.flags {
 		if strings.Contains(f, flag) {
@@ -100,7 +120,7 @@ func (self *ClusterNode) String() string {
 	return fmt.Sprintf("%s:%d", self.info.host, self.info.port)
 }
 
-func (self *ClusterNode) Connect() (err error) {
+func (self *ClusterNode) Connect(abort bool) (err error) {
 	if self.r != nil {
 		return nil
 	}
@@ -109,13 +129,21 @@ func (self *ClusterNode) Connect() (err error) {
 	//client, err := redis.DialTimeout("tcp", addr, 0, 1*time.Second, 1*time.Second)
 	client, err := redis.Dial("tcp", addr)
 	if err != nil {
-		logrus.Errorf("Sorry, can't connect to node %s", addr)
-		return err
+		if abort {
+			logrus.Fatalf("Sorry, connect to node %s failed in abort mode", addr)
+		} else {
+			logrus.Errorf("Sorry, can't connect to node %s", addr)
+			return err
+		}
 	}
 
 	if _, err = client.Do("PING"); err != nil {
-		logrus.Errorf("Sorry, ping node %s failed", addr)
-		return err
+		if abort {
+			logrus.Fatalf("Sorry, ping node %s failed in abort mode", addr)
+		} else {
+			logrus.Errorf("Sorry, ping node %s failed", addr)
+			return err
+		}
 	}
 
 	self.r = client
@@ -123,7 +151,7 @@ func (self *ClusterNode) Connect() (err error) {
 }
 
 func (self *ClusterNode) Call(cmd string, args ...interface{}) (interface{}, error) {
-	err := self.Connect()
+	err := self.Connect(true)
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +271,35 @@ func (self *ClusterNode) FlushNodeConfig() {
 }
 
 func (self *ClusterNode) InfoString() (result string) {
-	return ""
+	var role = "M"
+
+	if !self.HasFlag("master") {
+		role = "S"
+	}
+
+	keys := make([]int, 0, len(self.Slots()))
+
+	for k := range self.Slots() {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+	slotstr := MergeNumArray2NumRange(keys)
+
+	if self.info.replicate != "" && self.dirty {
+		result = fmt.Sprintf("S: %s %s", self.info.name, self.String())
+	} else {
+		// fix myself flag not the first element of []slots
+		result = fmt.Sprintf("%s: %s %s\n\t   slots:%s (%d slots) %s",
+			role, self.info.name, self.String(), slotstr, len(self.Slots()), strings.Join(self.info.flags[1:], ","))
+	}
+
+	if self.info.replicate != "" {
+		result = result + fmt.Sprintf("\n\t   replicates %s", self.info.replicate)
+	} else {
+		result = result + fmt.Sprintf("\n\t   %d additional replica(s)", len(self.replicas))
+	}
+
+	return result
 }
 
 func (self *ClusterNode) GetConfigSignature() string {
