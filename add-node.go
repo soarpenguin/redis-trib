@@ -62,15 +62,22 @@ func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 	// Add the new node
 	new := NewClusterNode(newaddr)
 	new.Connect(true)
-	new.AssertCluster()
-	new.LoadInfo(false)
+	if !new.AssertCluster() {
+		logrus.Fatalf("Node %s's cluster mode enabled!")
+	}
+
+	if err := new.LoadInfo(false); err != nil {
+		logrus.Fatalf("Load new node %s info failed: %s!", newaddr, err.Error())
+	}
 	new.AssertEmpty()
 	//first := self.nodes[0]
 	self.AddNode(new)
 
 	// Send CLUSTER FORGET to all the nodes but the node to remove
 	logrus.Printf(">>> Send CLUSTER MEET to node %s to make it join the cluster", new.String())
-	//new.R().Call("")
+	if _, err := new.ClusterAddNode(addr); err != nil {
+		logrus.Fatalf("Add new node %s failed: %s!", newaddr, err.Error())
+	}
 	logrus.Printf("[OK] New node added correctly.")
 	return nil
 }

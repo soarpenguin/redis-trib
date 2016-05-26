@@ -107,6 +107,14 @@ func (self *ClusterNode) Name() string {
 	return self.info.name
 }
 
+func (self *ClusterNode) Host() string {
+	return self.info.host
+}
+
+func (self *ClusterNode) Port() uint {
+	return self.info.port
+}
+
 func (self *ClusterNode) AddReplicasNode(node *ClusterNode) {
 	self.replicas = append(self.replicas, node)
 }
@@ -165,6 +173,14 @@ func (self *ClusterNode) Call(cmd string, args ...interface{}) (interface{}, err
 
 func (self *ClusterNode) Dbsize() (int, error) {
 	return redis.Int(self.Call("DBSIZE"))
+}
+
+func (self *ClusterNode) ClusterAddNode(addr string) (ret string, err error) {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil || host == "" || port == "" {
+		return "", fmt.Errorf("Bad format of host:port: %s", addr)
+	}
+	return redis.String(self.Call("CLUSTER", "meet", host, port))
 }
 
 func (self *ClusterNode) AssertCluster() bool {
