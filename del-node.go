@@ -10,7 +10,6 @@ import (
 )
 
 // del-node        host:port node_id
-
 var delNodeCommand = cli.Command{
 	Name:      "del-node",
 	Usage:     "del a redis node from existed cluster.",
@@ -54,7 +53,7 @@ func (self *RedisTrib) DelNodeClusterCmd(addr, nodeid string) error {
 	node := self.GetNodeByName(nodeid)
 
 	if node == nil {
-		logrus.Fatalf("[ERR] No such node ID %s", nodeid)
+		logrus.Fatalf("No such node ID %s", nodeid)
 	}
 
 	if len(node.Slots()) > 0 {
@@ -67,8 +66,26 @@ func (self *RedisTrib) DelNodeClusterCmd(addr, nodeid string) error {
 			continue
 		}
 		// send cluster forget cmd
+		if n == node {
+			continue
+		}
+
+		if n.Replicate() != "" && n.Replicate() == nodeid {
+			master := self.GetMasterWithLeastReplicas()
+			logrus.Printf(">>> %s as replica of %s", n.String(), master.String())
+			if _, err := n.ClusterReplicateWithNodeID(master.Name()); err != nil {
+				logrus.Errorf("%s", err.Error())
+			}
+		}
+
+		if _, err := n.ClusterForgetNodeID(nodeid); err != nil {
+			logrus.Errorf("%s", err.Error())
+		}
 	}
 	// Finally shutdown the node
 	logrus.Printf(">>> SHUTDOWN the node.")
+	if err := node.ClusterNodeShutdown(); err != nil {
+		return err
+	}
 	return nil
 }

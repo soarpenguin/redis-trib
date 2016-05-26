@@ -61,8 +61,27 @@ func (self *RedisTrib) GetNodeByAbbreviatedName() {
 	return
 }
 
-func (self *RedisTrib) GetMasterWithLeastReplicas() {
-	return
+func (self *RedisTrib) GetMasterWithLeastReplicas() (node *ClusterNode) {
+	mnodes := [](*ClusterNode){}
+	for _, node := range self.nodes {
+		if node.HasFlag("master") {
+			mnodes = append(mnodes, node)
+		}
+	}
+
+	var j int
+	for i, node := range mnodes {
+		if i == 0 {
+			j = i
+			continue
+		}
+
+		if len(node.Replicas()) < len(mnodes[j].Replicas()) {
+			j = i
+		}
+	}
+
+	return mnodes[j]
 }
 
 func (self *RedisTrib) ShowNodes() {

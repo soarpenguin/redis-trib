@@ -183,6 +183,23 @@ func (self *ClusterNode) ClusterAddNode(addr string) (ret string, err error) {
 	return redis.String(self.Call("CLUSTER", "meet", host, port))
 }
 
+func (self *ClusterNode) ClusterReplicateWithNodeID(nodeid string) (ret string, err error) {
+	return redis.String(self.Call("CLUSTER", "replicate", nodeid))
+}
+
+func (self *ClusterNode) ClusterForgetNodeID(nodeid string) (ret string, err error) {
+	return redis.String(self.Call("CLUSTER", "forget", nodeid))
+}
+
+func (self *ClusterNode) ClusterNodeShutdown() (err error) {
+	self.r.Send("SHUTDOWN")
+	if err = self.r.Flush(); err != nil {
+		return err
+	}
+	return nil
+	//return redis.String(self.Call("SHUTDOWN"))
+}
+
 func (self *ClusterNode) AssertCluster() bool {
 	info, err := redis.String(self.Call("INFO", "cluster"))
 	if err != nil {
