@@ -4,6 +4,7 @@ package main
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
@@ -42,6 +43,7 @@ func (self *RedisTrib) DelNodeClusterCmd(addr, nodeid string) error {
 	if addr == "" {
 		return errors.New("Please check host:port for del-node command.")
 	}
+	nodeid = strings.ToLower(nodeid)
 	logrus.Printf(">>> Removing node %s from cluster %s", nodeid, addr)
 
 	// Load cluster information
