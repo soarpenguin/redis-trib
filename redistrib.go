@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	//"github.com/codegangsta/cli"
+	"github.com/garyburd/redigo/redis"
 )
 
 var strToLower = strings.ToLower
@@ -253,4 +253,49 @@ func (self *RedisTrib) ShowClusterInfo() {
 	logrus.Printf("[OK] %d keys in %d masters.", keys, masters)
 	kpslot := float64(keys) / 16384.0
 	logrus.Printf("%.2f keys per slot on average.", kpslot)
+}
+
+// get from https://github.com/badboy/redis-trib.go
+type InterfaceErrorCombo struct {
+	result interface{}
+	err    error
+}
+
+type EachFunction func(*ClusterNode, interface{}, error, string, []interface{})
+
+func (self *RedisTrib) EachRunCommand(f EachFunction, cmd string, args ...interface{}) ([]*InterfaceErrorCombo, error) {
+	nodes := self.nodes
+
+	ies := make([]*InterfaceErrorCombo, len(nodes))
+
+	for i, node := range nodes {
+		val, err := node.Call(cmd, args...)
+		ie := &InterfaceErrorCombo{val, err}
+		ies[i] = ie
+
+		if f != nil {
+			f(node, val, err, cmd, args)
+		}
+	}
+
+	return ies, nil
+}
+
+func (self *RedisTrib) EachPrint(cmd string, args ...interface{}) ([]*InterfaceErrorCombo, error) {
+	return self.EachRunCommand(
+		func(node *ClusterNode, result interface{}, err error, cmd string, args []interface{}) {
+			val, _ := redis.String(result, err)
+
+			if len(args) > 0 {
+				strArgs := ToStringArray(args)
+				logrus.Printf("%s: %s %s \n%s",
+					node.String(), cmd, strings.Join(strArgs, " "), strings.Trim(val, " \n"))
+			} else {
+				logrus.Printf("%s: %s\n%s", node.String(), cmd, strings.Trim(val, " \n"))
+			}
+
+			if err != nil {
+				logrus.Println(err)
+			}
+		}, cmd, args...)
 }
