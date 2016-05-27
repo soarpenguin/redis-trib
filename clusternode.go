@@ -197,25 +197,28 @@ func (self *ClusterNode) ClusterNodeShutdown() (err error) {
 		return err
 	}
 	return nil
-	//return redis.String(self.Call("SHUTDOWN"))
 }
 
 func (self *ClusterNode) AssertCluster() bool {
 	info, err := redis.String(self.Call("INFO", "cluster"))
-	if err != nil {
-		return false
+	if err != nil ||
+		!strings.Contains(info, "cluster_enabled:1") {
+		logrus.Fatalf("Node %s is not configured as a cluster node.", self.String())
 	}
 
-	return strings.Contains(info, "cluster_enabled:1")
+	return true
 }
 
 func (self *ClusterNode) AssertEmpty() bool {
-	info, err := redis.String(self.Call("INFO", "keyspace"))
-	if err != nil {
-		return false
+
+	info, err := redis.String(self.Call("INFO"))
+	db0, e := redis.String(self.Call("INFO", "db0"))
+	if err != nil || !strings.Contains(info, "cluster_known_nodes:1") ||
+		e != nil || strings.Trim(db0, " ") == "" {
+		logrus.Fatalf("Node %s is not empty. Either the node already knows other nodes (check with CLUSTER NODES) or contains some key in database 0.", self.String())
 	}
 
-	return strings.Contains(info, "# Keyspace")
+	return true
 }
 
 func (self *ClusterNode) LoadInfo(getfriends bool) (err error) {
@@ -304,8 +307,15 @@ func (self *ClusterNode) FlushNodeConfig() {
 
 	if self.info.replicate != "" {
 		// run replicate cmd
+		if _, err := self.ClusterReplicateWithNodeID(self.info.replicate); err != nil {
+			// If the cluster did not already joined it is possible that
+			// the slave does not know the master node yet. So on errors
+			// we return ASAP leaving the dirty flag set, to flush the
+			// config later.
+			return
+		}
 	} else {
-		// run addslots cmd
+		// XXX run addslots cmd
 	}
 
 	self.dirty = false
