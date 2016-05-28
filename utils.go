@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -73,6 +75,17 @@ func ToStringArray(in []interface{}) []string {
 	}
 
 	return result
+}
+
+func YesOrDie(msg string) {
+	fmt.Printf("%s (type 'yes' to accept): ", msg)
+
+	reader := bufio.NewReader(os.Stdin)
+	text, _ := reader.ReadString('\n')
+
+	if !strings.EqualFold(strings.TrimSpace(text), "yes") {
+		logrus.Fatalf("*** Aborting...")
+	}
 }
 
 /* CRC16 implementation according to CCITT standards.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
@@ -127,6 +128,22 @@ func (self *RedisTrib) isConfigConsistent() bool {
 		}
 	}
 	return clean
+}
+
+func (self *RedisTrib) WaitClusterJoin() bool {
+	logrus.Printf("Waiting for the cluster to join")
+
+	for {
+
+		if !self.isConfigConsistent() {
+			fmt.Printf(".")
+			time.Sleep(time.Second * 1)
+		} else {
+			break
+		}
+	}
+
+	return true
 }
 
 func (self *RedisTrib) CheckOpenSlots() {
