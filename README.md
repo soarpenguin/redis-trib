@@ -9,7 +9,7 @@ Inspired heavily by [redis-trib.go][] and the original [redis-trib.rb][].
 * [redigo][]
 * [cli][]
 
-Dependencies are handled by [godep][], simple install it and type `godep` to fetch them.
+Dependencies are handled by [godep][], simple install it and type `godep restore` to fetch them.
 
 ## Install
 
@@ -19,3 +19,10 @@ cd redis-trib
 make bin
 ~~
 
+
+[cluster-tutorial]: http://redis.io/topics/cluster-tutorial
+[redis-trib.go]: https://github.com/badboy/redis-trib.go
+[redis-trib.rb]: https://github.com/antirez/redis/blob/unstable/src/redis-trib.rb
+[redigo]: https://github.com/garyburd/redigo/
+[cli]: https://github.com/codegangsta/cli
+[godep]: https://github.com/tools/godep
