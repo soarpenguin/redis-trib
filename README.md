@@ -13,11 +13,11 @@ Dependencies are handled by [godep][], simple install it and type `godep restore
 
 ## Install
 
-~~haskell
-git clone https://github.com/soarpenguin/redis-trib.git
-cd redis-trib
-make bin
-~~
+```console
+$ git clone https://github.com/soarpenguin/redis-trib.git
+$ cd redis-trib
+$ make bin
+```
 
 
 [cluster-tutorial]: http://redis.io/topics/cluster-tutorial
