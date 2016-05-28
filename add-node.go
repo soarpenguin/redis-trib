@@ -23,7 +23,7 @@ var addNodeCommand = cli.Command{
 			Value: "",
 			Usage: `Master id for slave node to meet.
 
-    $ redis-trib add-node <--master-id arg> new_host:new_port existing_host:existing_port`,
+    $ redis-trib add-node <--slave --master-id arg> new_host:new_port existing_host:existing_port`,
 		},
 	},
 	Action: func(context *cli.Context) error {
@@ -44,6 +44,8 @@ var addNodeCommand = cli.Command{
 func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 	var newaddr string
 	var addr string
+	var masterID string
+	var master *ClusterNode
 
 	if newaddr = context.Args().Get(0); newaddr == "" {
 		logrus.Fatalf("Please check new_host:new_port for add-node command!")
@@ -59,12 +61,25 @@ func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 	}
 	self.CheckCluster(false)
 
+	// If --master-id was specified, try to resolve it now so that we
+	// abort before starting with the node configuration.
+	if context.Bool("slave") {
+		masterID = context.String("master-id")
+		if masterID != "" {
+			master = self.GetNodeByName(masterID)
+			if master == nil {
+				logrus.Errorf("No such master ID %s", masterID)
+			}
+		} else {
+			master = self.GetMasterWithLeastReplicas()
+			logrus.Printf("Automatically selected master %s", master.String())
+		}
+	}
+
 	// Add the new node
 	new := NewClusterNode(newaddr)
 	new.Connect(true)
-	if !new.AssertCluster() {
-		logrus.Fatalf("Node %s's cluster mode enabled!")
-	}
+	new.AssertCluster()
 
 	if err := new.LoadInfo(false); err != nil {
 		logrus.Fatalf("Load new node %s info failed: %s!", newaddr, err.Error())
@@ -77,6 +92,12 @@ func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 	logrus.Printf(">>> Send CLUSTER MEET to node %s to make it join the cluster", new.String())
 	if _, err := new.ClusterAddNode(addr); err != nil {
 		logrus.Fatalf("Add new node %s failed: %s!", newaddr, err.Error())
+	}
+
+	if context.Bool("slave") {
+		self.WaitClusterJoin()
+		logrus.Printf(">>> Configure node as replica of %s.", master.String())
+		new.ClusterReplicateWithNodeID(master.Name())
 	}
 	logrus.Printf("[OK] New node added correctly.")
 	return nil
