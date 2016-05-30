@@ -49,6 +49,10 @@ func (self *RedisTrib) ClusterError(err string) {
 	logrus.Errorf(err)
 }
 
+func (self *RedisTrib) Errors() []error {
+	return self.errors
+}
+
 func (self *RedisTrib) GetNodeByName(name string) (node *ClusterNode) {
 	for _, node := range self.nodes {
 		if strToLower(node.Info().name) == strToLower(name) {
