@@ -91,6 +91,20 @@ func (self *RedisTrib) ShowNodes() {
 	}
 }
 
+// Redis Cluster config epoch collision resolution code is able to eventually
+// set a different epoch to each node after a new cluster is created, but
+// it is slow compared to assign a progressive config epoch to each node
+// before joining the cluster. However we do just a best-effort try here
+// since if we fail is not a problem.
+func (self *RedisTrib) AssignConfigEpoch() {
+	configEpoch := 1
+
+	for _, node := range self.nodes {
+		node.Call("CLUSTER", "set-config-epoch", configEpoch)
+		configEpoch += 1
+	}
+}
+
 func (self *RedisTrib) CheckCluster(quiet bool) {
 	logrus.Printf(">>> Performing Cluster Check (using node %s).", self.nodes[0].String())
 

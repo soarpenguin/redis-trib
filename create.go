@@ -3,6 +3,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 )
@@ -55,6 +57,20 @@ func (self *RedisTrib) CreateClusterCmd(context *cli.Context) error {
 	self.AllocSlots(replicasOpt)
 	self.ShowNodes()
 	YesOrDie("Can I set the above configuration?")
+	// flush_nodes_config
+	logrus.Printf(">>> Nodes configuration updated")
+	logrus.Printf(">>> Assign a different config epoch to each node")
+	self.AssignConfigEpoch()
+	logrus.Printf(">>> Sending CLUSTER MEET messages to join the cluster")
+	// join_cluster
+
+	// Give one second for the join to start, in order to avoid that
+	// wait_cluster_join will find all the nodes agree about the config as
+	// they are still empty with unassigned slots.
+	time.Sleep(time.Second * 1)
+	self.WaitClusterJoin()
+	//flush_nodes_config # Useful for the replicas
+	self.CheckCluster(false)
 	return nil
 }
 
