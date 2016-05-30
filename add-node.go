@@ -9,6 +9,7 @@ import (
 
 var addNodeCommand = cli.Command{
 	Name:      "add-node",
+	Aliases:   []string{"add"},
 	Usage:     "add a new redis node to existed cluster.",
 	ArgsUsage: `new_host:new_port existing_host:existing_port`,
 	Flags: []cli.Flag{

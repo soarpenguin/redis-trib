@@ -48,6 +48,9 @@ func main() {
 			Usage: "set the format used by logs ('text' (default), or 'json')",
 		},
 	}
+	app.Author = "soarpenguin"
+	app.Email = "soarpenguin@gmail.com"
+	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		addNodeCommand,
 		callCommand,
