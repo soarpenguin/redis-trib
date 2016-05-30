@@ -48,9 +48,7 @@ var rebalanceCommand = cli.Command{
 		cli.StringFlag{
 			Name:  "replicas, r",
 			Value: "",
-			Usage: `Slave number for every master created, the default value is none.
-
-    $ redis-trib create <--replicas 1> <host1:port1 ... hostN:portN>`,
+			Usage: `Slave number for every master created, the default value is none.`,
 		},
 		cli.IntFlag{
 			Name:  "threshold",
