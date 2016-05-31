@@ -56,6 +56,35 @@ var rebalanceCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
+		if len(context.Args()) < 1 {
+			logrus.Fatalf("Must provide at least \"host:port\" for rebalance command!")
+		}
+
+		rt := NewRedisTrib()
+		if err := rt.RebalanceClusterCmd(context); err != nil {
+			//logrus.Errorf("%p", err)
+			return err
+		}
 		return nil
 	},
+}
+
+func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
+	var addr string
+	if addr = context.Args().Get(0); addr == "" {
+		return errors.New("Please check host:port for rebalance command.")
+	}
+
+	// Load nodes info before parsing options, otherwise we can't
+	// handle --weight.
+	if err := self.LoadClusterInfoFromNode(addr); err != nil {
+		return err
+	}
+
+	// Check cluster, only proceed if it looks sane.
+	self.CheckCluster(true)
+	if len(self.Errors()) > 0 {
+		logrus.Fatalf("*** Please fix your cluster problem before rebalancing.")
+	}
+	return nil
 }
