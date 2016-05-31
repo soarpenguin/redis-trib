@@ -3,6 +3,9 @@
 package main
 
 import (
+	"errors"
+
+	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 )
 
