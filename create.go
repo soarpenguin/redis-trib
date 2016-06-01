@@ -45,7 +45,9 @@ func (self *RedisTrib) CreateClusterCmd(context *cli.Context) error {
 		}
 		node := NewClusterNode(addr)
 		node.Connect(true)
-		node.AssertCluster()
+		if !node.AssertCluster() {
+			logrus.Fatalf("Node %s is not configured as a cluster node.", node.String())
+		}
 		node.LoadInfo(false)
 		//node.AssertEmpty()
 		self.AddNode(node)

@@ -249,7 +249,9 @@ func (self *RedisTrib) LoadClusterInfoFromNode(addr string) error {
 		return err
 	}
 
-	node.AssertCluster()
+	if !node.AssertCluster() {
+		logrus.Fatalf("Node %s is not configured as a cluster node.", node.String())
+	}
 	if err := node.LoadInfo(true); err != nil {
 		//logrus.Fatalf("Load info from node %s failed.", node)
 		return fmt.Errorf("Load info from node %s failed.", node)

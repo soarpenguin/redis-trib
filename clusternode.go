@@ -203,7 +203,7 @@ func (self *ClusterNode) AssertCluster() bool {
 	info, err := redis.String(self.Call("INFO", "cluster"))
 	if err != nil ||
 		!strings.Contains(info, "cluster_enabled:1") {
-		logrus.Fatalf("Node %s is not configured as a cluster node.", self.String())
+		return false
 	}
 
 	return true

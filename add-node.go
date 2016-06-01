@@ -80,7 +80,9 @@ func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 	// Add the new node
 	new := NewClusterNode(newaddr)
 	new.Connect(true)
-	new.AssertCluster()
+	if !new.AssertCluster() { // quit if not in cluster mode
+		logrus.Fatalf("Node %s is not configured as a cluster node.", new.String())
+	}
 
 	if err := new.LoadInfo(false); err != nil {
 		logrus.Fatalf("Load new node %s info failed: %s!", newaddr, err.Error())
