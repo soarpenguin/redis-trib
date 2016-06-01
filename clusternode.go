@@ -52,11 +52,11 @@ func (self *NodeInfo) String() string {
 //////////////////////////////////////////////////////////
 // struct of redis cluster node.
 type ClusterNode struct {
-	r        redis.Conn
-	info     *NodeInfo
-	dirty    bool
-	friends  [](*NodeInfo)
-	replicas [](*ClusterNode)
+	r             redis.Conn
+	info          *NodeInfo
+	dirty         bool
+	friends       [](*NodeInfo)
+	replicasNodes [](*ClusterNode)
 }
 
 func NewClusterNode(addr string) (node *ClusterNode) {
@@ -87,8 +87,12 @@ func (self *ClusterNode) Friends() []*NodeInfo {
 	return self.friends
 }
 
-func (self *ClusterNode) Replicas() []*ClusterNode {
-	return self.replicas
+func (self *ClusterNode) ReplicasNodes() []*ClusterNode {
+	return self.replicasNodes
+}
+
+func (self *ClusterNode) AddReplicasNode(node *ClusterNode) {
+	self.replicasNodes = append(self.replicasNodes, node)
 }
 
 func (self *ClusterNode) Slots() map[int]int {
@@ -113,10 +117,6 @@ func (self *ClusterNode) Host() string {
 
 func (self *ClusterNode) Port() uint {
 	return self.info.port
-}
-
-func (self *ClusterNode) AddReplicasNode(node *ClusterNode) {
-	self.replicas = append(self.replicas, node)
 }
 
 func (self *ClusterNode) HasFlag(flag string) bool {
@@ -347,7 +347,7 @@ func (self *ClusterNode) InfoString() (result string) {
 	if self.info.replicate != "" {
 		result = result + fmt.Sprintf("\n\t   replicates %s", self.info.replicate)
 	} else {
-		result = result + fmt.Sprintf("\n\t   %d additional replica(s)", len(self.replicas))
+		result = result + fmt.Sprintf("\n\t   %d additional replica(s)", len(self.replicasNodes))
 	}
 
 	return result

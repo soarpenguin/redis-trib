@@ -21,10 +21,11 @@ const (
 )
 
 type RedisTrib struct {
-	nodes   [](*ClusterNode)
-	fix     bool
-	errors  []error
-	timeout int
+	nodes       [](*ClusterNode)
+	fix         bool
+	errors      []error
+	timeout     int
+	replicasNum int // used for create command -replicas
 }
 
 func NewRedisTrib() (rt *RedisTrib) {
@@ -51,6 +52,14 @@ func (self *RedisTrib) ClusterError(err string) {
 
 func (self *RedisTrib) Errors() []error {
 	return self.errors
+}
+
+func (self *RedisTrib) ReplicasNum() int {
+	return self.replicasNum
+}
+
+func (self *RedisTrib) SetReplicasNum(replicasNum int) {
+	self.replicasNum = replicasNum
 }
 
 func (self *RedisTrib) GetNodeByName(name string) (node *ClusterNode) {
@@ -81,7 +90,7 @@ func (self *RedisTrib) GetMasterWithLeastReplicas() (node *ClusterNode) {
 			continue
 		}
 
-		if len(node.Replicas()) < len(mnodes[j].Replicas()) {
+		if len(node.ReplicasNodes()) < len(mnodes[j].ReplicasNodes()) {
 			j = i
 		}
 	}
@@ -294,7 +303,7 @@ func (self *RedisTrib) ShowClusterInfo() {
 				dbsize = 0
 			}
 			logrus.Printf("%s (%s...) -> %-5d keys | %d slots | %d slaves.",
-				node.String(), node.Name()[0:8], dbsize, len(node.Slots()), len(node.Replicas()))
+				node.String(), node.Name()[0:8], dbsize, len(node.Slots()), len(node.ReplicasNodes()))
 			masters += 1
 			keys += dbsize
 		}

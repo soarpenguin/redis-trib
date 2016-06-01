@@ -36,7 +36,7 @@ var createCommand = cli.Command{
 }
 
 func (self *RedisTrib) CreateClusterCmd(context *cli.Context) error {
-	var replicasOpt int
+	self.SetReplicasNum(context.Int("replicas"))
 
 	logrus.Printf(">>> Creating cluster")
 	for _, addr := range context.Args() {
@@ -51,10 +51,9 @@ func (self *RedisTrib) CreateClusterCmd(context *cli.Context) error {
 		self.AddNode(node)
 	}
 
-	replicasOpt = context.Int("replicas")
-	self.CheckCreateParameters(replicasOpt)
+	self.CheckCreateParameters(self.ReplicasNum())
 	logrus.Printf(">>> Performing hash slots allocation on %d nodes...", len(self.nodes))
-	self.AllocSlots(replicasOpt)
+	self.AllocSlots(self.ReplicasNum())
 	self.ShowNodes()
 	YesOrDie("Can I set the above configuration?")
 	// flush_nodes_config
