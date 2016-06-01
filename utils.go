@@ -146,3 +146,18 @@ func crc16(s string) uint16 {
 	}
 	return crc
 }
+
+// Turn a key name into the corrisponding Redis Cluster slot.
+func Key2Slot(key string) uint16 {
+	// Only hash what is inside {...} if there is such a pattern in the key.
+	// Note that the specification requires the content that is between
+	// the first { and the first } after the first {. If we found {} without
+	// nothing in the middle, the whole key is hashed as usually.
+	start := strings.Index(key, "{")
+	end := strings.LastIndex(key, "}")
+
+	if start >= 0 && end >= 0 && start < end {
+		key = key[start:end]
+	}
+	return crc16(key) % 16384
+}

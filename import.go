@@ -68,5 +68,17 @@ func (self *RedisTrib) ImportClusterCmd(context *cli.Context) error {
 	// Check cluster, only proceed if it looks sane.
 	self.CheckCluster(false)
 
+	// Connect to the source node.
+	logrus.Printf(">>> Connecting to the source Redis instance")
+	srcNode := NewClusterNode(source)
+
+	if srcNode.AssertCluster() {
+		logrus.Errorf("The source node should not be a cluster node.")
+	}
+	dbsize, _ := srcNode.Dbsize()
+	logrus.Printf("*** Importing %d keys from DB 0", dbsize)
+
+	// Build a slot -> node map
+	//slots := make(map[int]*ClusterNode)
 	return nil
 }
