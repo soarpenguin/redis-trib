@@ -1,12 +1,12 @@
 default: help
 
 COMMIT := $(shell git rev-parse HEAD 2> /dev/null || true)
-export GOPATH := $(CURDIR)/Godeps/_workspace
 
 ## Make bin for redis-trib.
 bin:
 	#go get github.com/tools/godep
 	#godep restore
+	GOPATH=`godep path`
 	go build -i -ldflags "-X main.gitCommit=${COMMIT}" -o redis-trib .
 
 ## Get vet go tools.

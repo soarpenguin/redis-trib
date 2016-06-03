@@ -1,27 +1,27 @@
 {
 	"ImportPath": "github.com/soarpenguin/redis-trib",
 	"GoVersion": "go1.6",
-	"GodepVersion": "v70",
+	"GodepVersion": "v74",
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.10.0-16-gcd7d1bb",
-			"Rev": "cd7d1bbe41066b6c1f19780f895901052150a575"
+			"Comment": "v0.10.0-19-gf3cfb45",
+			"Rev": "f3cfb454f4c209e6668c95216c4744b8fddb2356"
 		},
 		{
 			"ImportPath": "github.com/codegangsta/cli",
-			"Comment": "v1.17.0-25-gbebbcf6",
-			"Rev": "bebbcf6d41ebde6db3940e63426b8ebcefca23c8"
+			"Comment": "v1.17.0-57-gedb24d0",
+			"Rev": "edb24d02aa3cea2319c33f2836d4a5133907fe4c"
 		},
 		{
 			"ImportPath": "github.com/garyburd/redigo/internal",
-			"Comment": "v1.0.0",
-			"Rev": "8873b2f1995f59d4bcdd2b0dc9858e2cb9bf0c13"
+			"Comment": "v1.0.0-1-gb8dc900",
+			"Rev": "b8dc90050f24c1a73a52f107f3f575be67b21b7c"
 		},
 		{
 			"ImportPath": "github.com/garyburd/redigo/redis",
-			"Comment": "v1.0.0",
-			"Rev": "8873b2f1995f59d4bcdd2b0dc9858e2cb9bf0c13"
+			"Comment": "v1.0.0-1-gb8dc900",
+			"Rev": "b8dc90050f24c1a73a52f107f3f575be67b21b7c"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",
