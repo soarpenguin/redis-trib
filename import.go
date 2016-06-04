@@ -7,6 +7,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/garyburd/redigo/redis"
 )
 
 // import          host:port
@@ -57,6 +58,9 @@ func (self *RedisTrib) ImportClusterCmd(context *cli.Context) error {
 		return errors.New("Please check host:port for import command.")
 	}
 
+	useCopy := context.Bool("copy")
+	useReplace := context.Bool("replace")
+
 	logrus.Printf(">>> Importing data from %s to cluster %s", source, addr)
 
 	// Load nodes info before parsing options, otherwise we can't
@@ -79,6 +83,53 @@ func (self *RedisTrib) ImportClusterCmd(context *cli.Context) error {
 	logrus.Printf("*** Importing %d keys from DB 0", dbsize)
 
 	// Build a slot -> node map
-	//slots := make(map[int]*ClusterNode)
+	slots := make(map[int]*ClusterNode)
+	for _, node := range self.nodes {
+		for key, _ := range node.Slots() {
+			slots[key] = node
+		}
+	}
+
+	// Use SCAN to iterate over the keys, migrating to the
+	// right node as needed.
+	var keys []string
+	cursor := 0
+	for {
+		// we scan with our iter offset, starting at 0
+		if arr, err := redis.MultiBulk(srcNode.R().Do("SCAN", cursor)); err != nil {
+			logrus.Errorf("Do scan in import cmd failed: %s", err.Error())
+		} else {
+			// now we get the iter and the keys from the multi-bulk reply
+			cursor, _ = redis.Int(arr[0], nil)
+			keys, _ = redis.Strings(arr[1], nil)
+		}
+		// check if we need to stop...
+		if cursor == 0 {
+			break
+		}
+
+		var cmd []interface{}
+		for _, key := range keys {
+			slot := Key2Slot(key)
+			target := slots[int(slot)]
+			logrus.Printf("Migrating %s to %s - OK", key, target.String())
+
+			cmd = append(cmd, target.Host(), target.Port(), key, 0, MigrateDefaultTimeout)
+
+			if useCopy {
+				cmd = append(cmd, useCopy)
+			}
+
+			if useReplace {
+				cmd = append(cmd, useReplace)
+			}
+
+			if _, err := srcNode.Call("migrate", cmd...); err != nil {
+				logrus.Printf("Migrating %s to %s - %s", key, target.String(), err.Error())
+			} else {
+				logrus.Printf("Migrating %s to %s - OK", key, target.String())
+			}
+		}
+	}
 	return nil
 }
