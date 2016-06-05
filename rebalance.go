@@ -84,10 +84,44 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 		return err
 	}
 
+	// Options parsing
+	//weights := make(map[string]int)
+	useEmpty := context.Bool("use-empty-masters")
+
+	// Assign a weight to each node, and compute the total cluster weight.
+	//totalWeight := 0
+	nodesInvolved := 0
+	for _, node := range self.nodes {
+		if node.HasFlag("master") {
+			if !useEmpty && len(node.Slots()) == 0 {
+				continue
+			}
+			//n.info[:w] = weights[n.info[:name]] ? weights[n.info[:name]] : 1
+			//total_weight += n.info[:w]
+			nodesInvolved += 1
+		}
+	}
+
 	// Check cluster, only proceed if it looks sane.
 	self.CheckCluster(true)
 	if len(self.Errors()) > 0 {
 		logrus.Fatalf("*** Please fix your cluster problem before rebalancing.")
 	}
+
+	// Calculate the slots balance for each node. It's the number of
+	// slots the node should lose (if positive) or gain (if negative)
+	// in order to be balanced.
+	threshold := context.Int("threshold")
+	thresholdReached := false
+	for _, node := range self.nodes {
+		if node.HasFlag("master") {
+
+		}
+	}
+	if !thresholdReached {
+		logrus.Printf("*** No rebalancing needed! All nodes are within the %f threshold.", threshold)
+		return nil
+	}
+
 	return nil
 }
