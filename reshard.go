@@ -199,5 +199,54 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 		//logrus.Printf("%v", sources)
 	}
 
+	// Check if the destination node is the same of any source nodes.
+	for _, node := range sources {
+		if node != nil {
+			if cnode, ok := node.(ClusterNode); ok {
+				if cnode.Name() == target.Name() {
+					logrus.Fatalf("*** Target node is also listed among the source nodes!")
+				}
+			}
+		}
+	}
+
+	logrus.Printf("Ready to move %d slots.", numSlots)
+	logrus.Printf("  Source nodes:")
+	for _, node := range sources {
+		if cnode, ok := node.(ClusterNode); ok {
+			fmt.Printf("\t%s", cnode.InfoString())
+		}
+	}
+	logrus.Printf("  Destination nodes: %s", target.InfoString())
+
+	//reshardTable := ComputeReshardTable(sources, numSlots)
+	logrus.Printf("  Resharding plan:")
+	//show_reshard_table(reshard_table)
+
+	if !context.Bool("yes") {
+		fmt.Printf("Do you want to proceed with the proposed reshard plan (yes/no)? ")
+		reader := bufio.NewReader(os.Stdin)
+		text, _ := reader.ReadString('\n')
+
+		if !strings.EqualFold(strings.TrimSpace(text), "yes") {
+			logrus.Fatalf("*** Aborting...")
+		}
+	}
+
+	//for _, _ := range reshardTable {
+	//	// move slot
+	//}
+
+	return nil
+}
+
+func ComputeReshardTable(sources []interface{}, numSlots int) []ClusterNode {
+	// Sort from bigger to smaller instance, for two reasons:
+	// 1) If we take less slots than instances it is better to start
+	//    getting from the biggest instances.
+	// 2) We take one slot more from the first instance in the case of not
+	//    perfect divisibility. Like we have 3 nodes and need to get 10
+	//    slots, we take 4 from the first, and 3 from the rest. So the
+	//    biggest is always the first.
 	return nil
 }

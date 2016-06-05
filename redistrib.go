@@ -360,3 +360,15 @@ func (self *RedisTrib) EachPrint(cmd string, args ...interface{}) ([]*InterfaceE
 			}
 		}, cmd, args...)
 }
+
+//  Move slots between source and target nodes using MIGRATE.
+//
+//  Options:
+//  :verbose -- Print a dot for every moved key.
+//  :fix     -- We are moving in the context of a fix. Use REPLACE.
+//  :cold    -- Move keys without opening slots / reconfiguring the nodes.
+//  :update  -- Update nodes.info[:slots] for source/target nodes.
+//  :quiet   -- Don't print info messages.
+func MoveSlot(src, target ClusterNode, slot string, args []interface{}) {
+
+}
