@@ -71,10 +71,30 @@ func (self *RedisTrib) GetNodeByName(name string) (node *ClusterNode) {
 	return nil
 }
 
-func (self *RedisTrib) GetNodeByAbbreviatedName() {
-	return
+// Like get_node_by_name but the specified name can be just the first
+// part of the node ID as long as the prefix in unique across the
+// cluster.
+func (self *RedisTrib) GetNodeByAbbreviatedName(name string) (n *ClusterNode) {
+	length := len(name)
+	var candidates = []*ClusterNode{}
+
+	name = strings.ToLower(name)
+	for _, node := range self.nodes {
+		if node.Name()[0:length] == name {
+			candidates = append(candidates, node)
+		}
+	}
+
+	if len(candidates) != 1 {
+		return nil
+	}
+
+	return candidates[0]
 }
 
+// This function returns the master that has the least number of replicas
+// in the cluster. If there are multiple masters with the same smaller
+// number of replicas, one at random is returned.
 func (self *RedisTrib) GetMasterWithLeastReplicas() (node *ClusterNode) {
 	mnodes := [](*ClusterNode){}
 	for _, node := range self.nodes {
@@ -98,6 +118,40 @@ func (self *RedisTrib) GetMasterWithLeastReplicas() (node *ClusterNode) {
 	return mnodes[j]
 }
 
+func (self *RedisTrib) CheckCluster(quiet bool) {
+	logrus.Printf(">>> Performing Cluster Check (using node %s).", self.nodes[0].String())
+
+	if !quiet {
+		self.ShowNodes()
+	}
+
+	self.CheckConfigConsistency()
+	self.CheckOpenSlots()
+	self.CheckSlotsCoverage()
+}
+
+func (self *RedisTrib) ShowClusterInfo() {
+	masters := 0
+	keys := 0
+
+	for _, node := range self.nodes {
+		if node.HasFlag("master") {
+			dbsize, err := node.Dbsize()
+			if err != nil {
+				dbsize = 0
+			}
+			logrus.Printf("%s (%s...) -> %-5d keys | %d slots | %d slaves.",
+				node.String(), node.Name()[0:8], dbsize, len(node.Slots()), len(node.ReplicasNodes()))
+			masters += 1
+			keys += dbsize
+		}
+	}
+
+	logrus.Printf("[OK] %d keys in %d masters.", keys, masters)
+	kpslot := float64(keys) / 16384.0
+	logrus.Printf("%.2f keys per slot on average.", kpslot)
+}
+
 func (self *RedisTrib) ShowNodes() {
 	for _, n := range self.nodes {
 		logrus.Println(n.InfoString())
@@ -116,18 +170,6 @@ func (self *RedisTrib) AssignConfigEpoch() {
 		node.Call("CLUSTER", "set-config-epoch", configEpoch)
 		configEpoch += 1
 	}
-}
-
-func (self *RedisTrib) CheckCluster(quiet bool) {
-	logrus.Printf(">>> Performing Cluster Check (using node %s).", self.nodes[0].String())
-
-	if !quiet {
-		self.ShowNodes()
-	}
-
-	self.CheckConfigConsistency()
-	self.CheckOpenSlots()
-	self.CheckSlotsCoverage()
 }
 
 func (self *RedisTrib) CheckConfigConsistency() {
@@ -214,7 +256,7 @@ func (self *RedisTrib) CheckOpenSlots() {
 // it seems more sensible.
 func (self *RedisTrib) FixOpenSlot(slot string) {
 	logrus.Printf(">>> Fixing open slot %s", slot)
-	// add fix open slot code here
+	// TODO: add fix open slot code here
 }
 
 func (self *RedisTrib) CheckSlotsCoverage() {
@@ -225,7 +267,7 @@ func (self *RedisTrib) CheckSlotsCoverage() {
 		logrus.Printf("[OK] All %d slots covered.", ClusterHashSlots)
 	} else {
 		self.ClusterError(fmt.Sprintf("Not all %d slots are covered by nodes.", ClusterHashSlots))
-		//fix_slots_coverage if @fix
+		// TODO: fix_slots_coverage if @fix
 	}
 }
 
@@ -292,28 +334,6 @@ func (self *RedisTrib) PopulateNodesReplicasInfo() {
 			master.AddReplicasNode(node)
 		}
 	}
-}
-
-func (self *RedisTrib) ShowClusterInfo() {
-	masters := 0
-	keys := 0
-
-	for _, node := range self.nodes {
-		if node.HasFlag("master") {
-			dbsize, err := node.Dbsize()
-			if err != nil {
-				dbsize = 0
-			}
-			logrus.Printf("%s (%s...) -> %-5d keys | %d slots | %d slaves.",
-				node.String(), node.Name()[0:8], dbsize, len(node.Slots()), len(node.ReplicasNodes()))
-			masters += 1
-			keys += dbsize
-		}
-	}
-
-	logrus.Printf("[OK] %d keys in %d masters.", keys, masters)
-	kpslot := float64(keys) / 16384.0
-	logrus.Printf("%.2f keys per slot on average.", kpslot)
 }
 
 // get from https://github.com/badboy/redis-trib.go

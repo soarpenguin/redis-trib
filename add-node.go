@@ -35,7 +35,6 @@ var addNodeCommand = cli.Command{
 
 		rt := NewRedisTrib()
 		if err := rt.AddNodeClusterCmd(context); err != nil {
-			//logrus.Errorf("%p", err)
 			return err
 		}
 		return nil
