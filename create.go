@@ -49,7 +49,7 @@ func (self *RedisTrib) CreateClusterCmd(context *cli.Context) error {
 			logrus.Fatalf("Node %s is not configured as a cluster node.", node.String())
 		}
 		node.LoadInfo(false)
-		//node.AssertEmpty()
+		node.AssertEmpty()
 		self.AddNode(node)
 	}
 
@@ -58,19 +58,20 @@ func (self *RedisTrib) CreateClusterCmd(context *cli.Context) error {
 	self.AllocSlots(self.ReplicasNum())
 	self.ShowNodes()
 	YesOrDie("Can I set the above configuration?")
-	// flush_nodes_config
+	// TODO: flush_nodes_config
+	self.FlushNodesConfig()
 	logrus.Printf(">>> Nodes configuration updated")
 	logrus.Printf(">>> Assign a different config epoch to each node")
 	self.AssignConfigEpoch()
 	logrus.Printf(">>> Sending CLUSTER MEET messages to join the cluster")
-	// join_cluster
+	// TODO: join_cluster
 
 	// Give one second for the join to start, in order to avoid that
 	// wait_cluster_join will find all the nodes agree about the config as
 	// they are still empty with unassigned slots.
 	time.Sleep(time.Second * 1)
 	self.WaitClusterJoin()
-	//flush_nodes_config # Useful for the replicas
+	self.FlushNodesConfig() // Useful for the replicas
 	self.CheckCluster(false)
 	return nil
 }
@@ -87,7 +88,14 @@ func (self *RedisTrib) CheckCreateParameters(repOpt int) bool {
 	return true
 }
 
+func (self *RedisTrib) FlushNodesConfig() {
+	for _, node := range self.nodes {
+		node.FlushNodeConfig()
+	}
+}
+
 func (self *RedisTrib) AllocSlots(repOpt int) {
+	// TODO:
 	// nodeNum := len(self.nodes)
 	// mastersNum := len(self.nodes) / (repOpt + 1)
 

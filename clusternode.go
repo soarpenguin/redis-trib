@@ -16,6 +16,7 @@ import (
 const (
 	UnusedHashSlot = iota
 	NewHashSlot
+	AssignedHashSlot
 )
 
 ///////////////////////////////////////////////////////////
@@ -315,10 +316,23 @@ func (self *ClusterNode) FlushNodeConfig() {
 			return
 		}
 	} else {
-		// XXX run addslots cmd
+		// TODO: run addslots cmd
+		var array []int
+		for s, value := range self.Slots() {
+			if value == NewHashSlot {
+				array = append(array, s)
+				self.info.slots[s] = AssignedHashSlot
+			}
+			self.ClusterAddSlots(array)
+		}
 	}
 
 	self.dirty = false
+}
+
+// XXX: check the error for call CLUSTER addslots
+func (self *ClusterNode) ClusterAddSlots(args ...interface{}) (ret string, err error) {
+	return redis.String(self.Call("CLUSTER", "addslots", args))
 }
 
 func (self *ClusterNode) InfoString() (result string) {
