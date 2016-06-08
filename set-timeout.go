@@ -35,7 +35,6 @@ var setTimeoutCommand = cli.Command{
 
 		rt := NewRedisTrib()
 		if err := rt.SetTimeoutClusterCmd(addr, int(milliseconds)); err != nil {
-			//logrus.Errorf("%p", err)
 			return err
 		}
 		return nil

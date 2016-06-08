@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -58,13 +59,12 @@ func (self *RedisTrib) CreateClusterCmd(context *cli.Context) error {
 	self.AllocSlots(self.ReplicasNum())
 	self.ShowNodes()
 	YesOrDie("Can I set the above configuration?")
-	// TODO: flush_nodes_config
 	self.FlushNodesConfig()
 	logrus.Printf(">>> Nodes configuration updated")
 	logrus.Printf(">>> Assign a different config epoch to each node")
 	self.AssignConfigEpoch()
 	logrus.Printf(">>> Sending CLUSTER MEET messages to join the cluster")
-	// TODO: join_cluster
+	self.JoinCluster()
 
 	// Give one second for the join to start, in order to avoid that
 	// wait_cluster_join will find all the nodes agree about the config as
@@ -91,6 +91,20 @@ func (self *RedisTrib) CheckCreateParameters(repOpt int) bool {
 func (self *RedisTrib) FlushNodesConfig() {
 	for _, node := range self.nodes {
 		node.FlushNodeConfig()
+	}
+}
+
+func (self *RedisTrib) JoinCluster() {
+	var first *ClusterNode = nil
+	var addr string
+
+	for _, node := range self.nodes {
+		if first == nil {
+			first = node
+			addr = fmt.Sprintf("%s:%d", node.Host(), node.Port())
+			continue
+		}
+		node.ClusterAddNode(addr)
 	}
 }
 
