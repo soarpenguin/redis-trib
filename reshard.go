@@ -219,8 +219,10 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 	}
 	logrus.Printf("  Destination nodes: %s", target.InfoString())
 
+	// TODO: ComputeReshardTable
 	//reshardTable := ComputeReshardTable(sources, numSlots)
 	logrus.Printf("  Resharding plan:")
+	// TODO: ShowReshardTable
 	//show_reshard_table(reshard_table)
 
 	if !context.Bool("yes") {
@@ -233,6 +235,7 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 		}
 	}
 
+	// TODO: Move slots
 	//for _, _ := range reshardTable {
 	//	// move slot
 	//}
