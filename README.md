@@ -14,7 +14,7 @@ Dependencies are handled by [godep][], simple install it and type `godep restore
 
 ## Install
 
-### Restore project env in first build
+#### Restore project env in first build
 ```console
 $ git clone https://github.com/soarpenguin/redis-trib.git
 $ cd redis-trib
@@ -23,7 +23,7 @@ $ make bin
 $ PROG=./redis-trib source ./autocomplete/bash_autocomplete
 ```
 
-### Build the code
+#### Build the code
 ```console
 $ cd redis-trib
 $ make bin
