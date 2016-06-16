@@ -1,4 +1,5 @@
 # **redis-trib** <sup><sub>_redis cluster Command Line tool_</sub></sup>
+[![Build Status](https://travis-ci.org/soarpenguin/redis-trib.svg?branch=master)](https://travis-ci.org/soarpenguin/redis-trib)
 
 Create and administrate your [Redis Cluster][cluster-tutorial] from the Command Line.
 
@@ -13,13 +14,20 @@ Dependencies are handled by [godep][], simple install it and type `godep restore
 
 ## Install
 
+### Restore project env in first build
 ```console
 $ git clone https://github.com/soarpenguin/redis-trib.git
 $ cd redis-trib
+$ make godep
 $ make bin
 $ PROG=./redis-trib source ./autocomplete/bash_autocomplete
 ```
 
+### Build the code
+```console
+$ cd redis-trib
+$ make bin
+```
 
 [cluster-tutorial]: http://redis.io/topics/cluster-tutorial
 [redis-trib.go]: https://github.com/badboy/redis-trib.go

@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"strconv"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
@@ -21,8 +23,9 @@ var rebalanceCommand = cli.Command{
 	Usage:     "rebalance a redis cluster.",
 	ArgsUsage: `host:port`,
 	Flags: []cli.Flag{
-		cli.IntFlag{
+		cli.StringFlag{
 			Name:  "weight",
+			Value: "",
 			Usage: "Specifies per redis weight.",
 		},
 		cli.BoolFlag{
@@ -41,9 +44,9 @@ var rebalanceCommand = cli.Command{
 			Name:  "simulate",
 			Usage: `Simulate flag for rebalance cluster.`,
 		},
-		cli.StringFlag{
+		cli.IntFlag{
 			Name:  "pipeline",
-			Value: "",
+			Value: MigrateDefaultPipeline,
 			Usage: `Pipeline for rebalance redis cluster.`,
 		},
 		cli.StringFlag{
@@ -53,6 +56,7 @@ var rebalanceCommand = cli.Command{
 		},
 		cli.IntFlag{
 			Name:  "threshold",
+			Value: RebalanceDefaultThreshold,
 			Usage: `Threshold for rebalance redis cluster.`,
 		},
 	},
@@ -60,7 +64,6 @@ var rebalanceCommand = cli.Command{
 		if len(context.Args()) < 1 {
 			logrus.Fatalf("Must provide at least \"host:port\" for rebalance command!")
 		}
-
 		rt := NewRedisTrib()
 		if err := rt.RebalanceClusterCmd(context); err != nil {
 			//logrus.Errorf("%p", err)
@@ -83,7 +86,27 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	}
 
 	// Options parsing
-	//weights := make(map[string]int)
+	//threshold := context.Int("threshold")
+	//autoweights := context.Bool("auto-weights")
+	weights := make(map[string]int)
+	if context.String("weight") != "" {
+		ws := strings.Split(context.String("weight"), ",")
+		for _, e := range ws {
+			if e != "" && strings.Contains(e, "=") {
+				s := strings.Split(e, "=")
+				node := self.GetNodeByAbbreviatedName(s[0])
+				if node == nil || !node.HasFlag("master") {
+					logrus.Fatalf("*** No such master node %s", s[0])
+				}
+
+				if w, err := strconv.Atoi(s[1]); err != nil {
+					logrus.Fatalf("Invalid weight num for rebalance: %s=%v", s[0], s[1])
+				} else {
+					weights[node.Name()] = w
+				}
+			}
+		}
+	}
 	useEmpty := context.Bool("use-empty-masters")
 
 	// Assign a weight to each node, and compute the total cluster weight.
