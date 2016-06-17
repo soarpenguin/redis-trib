@@ -32,6 +32,7 @@ type NodeInfo struct {
 	pingSent   int
 	pingRecv   int
 	weight     int
+	balance    int
 	linkStatus string
 	slots      map[int]int
 	migrating  map[int]string
@@ -115,6 +116,10 @@ func (self *ClusterNode) Weight() int {
 
 func (self *ClusterNode) SetWeight(w int) {
 	self.info.weight = w
+}
+
+func (self *ClusterNode) SetBalance(balance int) {
+	self.info.balance = balance
 }
 
 func (self *ClusterNode) Slots() map[int]int {

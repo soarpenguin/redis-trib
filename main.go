@@ -37,6 +37,10 @@ func main() {
 			Name:  "debug",
 			Usage: "enable debug output for logging",
 		},
+		cli.BoolFlag{
+			Name:  "verbose",
+			Usage: "verbose global flag for output.",
+		},
 		//cli.StringFlag{
 		//	Name:  "log",
 		//	Value: "/dev/null",

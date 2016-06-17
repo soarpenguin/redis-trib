@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"math"
 	"strconv"
 	"strings"
 
@@ -110,15 +111,20 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	useEmpty := context.Bool("use-empty-masters")
 
 	// Assign a weight to each node, and compute the total cluster weight.
-	//totalWeight := 0
+	totalWeight := 0
 	nodesInvolved := 0
 	for _, node := range self.nodes {
 		if node.HasFlag("master") {
 			if !useEmpty && len(node.Slots()) == 0 {
 				continue
 			}
-			//n.info[:w] = weights[n.info[:name]] ? weights[n.info[:name]] : 1
-			//total_weight += n.info[:w]
+			if w, ok := weights[node.Name()]; ok {
+				node.SetWeight(w)
+			} else {
+				node.SetWeight(1)
+			}
+
+			totalWeight += node.Weight()
 			nodesInvolved += 1
 		}
 	}
@@ -136,7 +142,31 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	thresholdReached := false
 	for _, node := range self.nodes {
 		if node.HasFlag("master") {
+			if node.Weight() == 0 {
+				continue
+			}
+			// TODO: add Calculate code.
+			expected := int((float64(ClusterHashSlots) / float64(totalWeight)) * float64(node.Weight()))
+			node.SetBalance(len(node.Slots()) - expected)
+			// Compute the percentage of difference between the
+			// expected number of slots and the real one, to see
+			// if it's over the threshold specified by the user.
+			overThreshold := false
 
+			if threshold > 0 {
+				if len(node.Slots()) > 0 {
+					errPerc := math.Abs(float64(100 - (100.0*expected)/len(node.Slots())))
+					if int(errPerc) > threshold {
+						overThreshold = true
+					}
+				} else if expected > 0 {
+					overThreshold = true
+				}
+			}
+
+			if overThreshold {
+				thresholdReached = true
+			}
 		}
 	}
 	if !thresholdReached {
@@ -144,5 +174,33 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 		return nil
 	}
 
+	// Only consider nodes we want to change
+	//sn = @nodes.select{|n|
+	//    n.has_flag?("master") && n.info[:w]
+	//}
+
+	// Because of rounding, it is possible that the balance of all nodes
+	// summed does not give 0. Make sure that nodes that have to provide
+	// slots are always matched by nodes receiving slots.
+	//total_balance = sn.map{|x| x.info[:balance]}.reduce{|a,b| a+b}
+	//while total_balance > 0
+	//    sn.each{|n|
+	//        if n.info[:balance] < 0 && total_balance > 0
+	//            n.info[:balance] -= 1
+	//            total_balance -= 1
+	//        end
+	//    }
+	//end
+
+	// Sort nodes by their slots balance.
+	//sn = sn.sort{|a,b|
+	//    a.info[:balance] <=> b.info[:balance]
+	//}
+
+	logrus.Printf(">>> Rebalancing across %d nodes. Total weight = %d", nodesInvolved, totalWeight)
+
+	if context.GlobalBool("verbose") {
+
+	}
 	return nil
 }
