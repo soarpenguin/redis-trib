@@ -31,6 +31,7 @@ type NodeInfo struct {
 	replicate  string
 	pingSent   int
 	pingRecv   int
+	weight     int
 	linkStatus string
 	slots      map[int]int
 	migrating  map[int]string
@@ -96,6 +97,26 @@ func (self *ClusterNode) AddReplicasNode(node *ClusterNode) {
 	self.replicasNodes = append(self.replicasNodes, node)
 }
 
+func (self *ClusterNode) Host() string {
+	return self.info.host
+}
+
+func (self *ClusterNode) Port() uint {
+	return self.info.port
+}
+
+func (self *ClusterNode) Name() string {
+	return self.info.name
+}
+
+func (self *ClusterNode) Weight() int {
+	return self.info.weight
+}
+
+func (self *ClusterNode) SetWeight(w int) {
+	self.info.weight = w
+}
+
 func (self *ClusterNode) Slots() map[int]int {
 	return self.info.slots
 }
@@ -106,18 +127,6 @@ func (self *ClusterNode) Migrating() map[int]string {
 
 func (self *ClusterNode) Importing() map[int]string {
 	return self.info.importing
-}
-
-func (self *ClusterNode) Name() string {
-	return self.info.name
-}
-
-func (self *ClusterNode) Host() string {
-	return self.info.host
-}
-
-func (self *ClusterNode) Port() uint {
-	return self.info.port
 }
 
 func (self *ClusterNode) HasFlag(flag string) bool {
