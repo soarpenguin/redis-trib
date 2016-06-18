@@ -175,9 +175,12 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	}
 
 	// Only consider nodes we want to change
-	//sn = @nodes.select{|n|
-	//    n.has_flag?("master") && n.info[:w]
-	//}
+	var sn [](*ClusterNode)
+	for _, node := range self.nodes {
+		if node.HasFlag("master") && node.Weight() != 0 {
+			sn = append(sn, node)
+		}
+	}
 
 	// Because of rounding, it is possible that the balance of all nodes
 	// summed does not give 0. Make sure that nodes that have to provide

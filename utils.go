@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strings"
 
@@ -86,6 +87,10 @@ func YesOrDie(msg string) {
 	if !strings.EqualFold(strings.TrimSpace(text), "yes") {
 		logrus.Fatalf("*** Aborting...")
 	}
+}
+
+func Round(num float64) int {
+	return int(num + math.Copysign(0.5, num))
 }
 
 /* CRC16 implementation according to CCITT standards.
