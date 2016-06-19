@@ -53,9 +53,9 @@ func (self *RedisTrib) CreateClusterCmd(context *cli.Context) error {
 		self.AddNode(node)
 	}
 
-	self.CheckCreateParameters(self.ReplicasNum())
+	self.CheckCreateParameters()
 	logrus.Printf(">>> Performing hash slots allocation on %d nodes...", len(self.nodes))
-	self.AllocSlots(self.ReplicasNum())
+	self.AllocSlots()
 	self.ShowNodes()
 	YesOrDie("Can I set the above configuration?")
 	self.FlushNodesConfig()
@@ -75,7 +75,8 @@ func (self *RedisTrib) CreateClusterCmd(context *cli.Context) error {
 	return nil
 }
 
-func (self *RedisTrib) CheckCreateParameters(repOpt int) bool {
+func (self *RedisTrib) CheckCreateParameters() bool {
+	repOpt := self.ReplicasNum()
 	masters := len(self.nodes) / (repOpt + 1)
 
 	if masters < 3 {
@@ -107,11 +108,11 @@ func (self *RedisTrib) JoinCluster() {
 	}
 }
 
-func (self *RedisTrib) AllocSlots(repOpt int) {
+func (self *RedisTrib) AllocSlots() {
 	// TODO:
 	var masters [](*ClusterNode)
 	nodeNum := len(self.nodes)
-	mastersNum := len(self.nodes) / (repOpt + 1)
+	mastersNum := len(self.nodes) / (self.ReplicasNum() + 1)
 
 	// The first step is to split instances by IP. This is useful as
 	// we'll try to allocate master nodes in different physical machines
@@ -131,26 +132,31 @@ func (self *RedisTrib) AllocSlots(repOpt int) {
 	logrus.Printf("Using %d masters:", mastersNum)
 	var interleaved [](*ClusterNode)
 	stop := false
-
 	for !stop {
-		for _, nodes := range ips {
+		// Take one node from each IP until we run out of nodes
+		// across every IP.
+		for ip, nodes := range ips {
 			if len(nodes) == 0 {
+				// if this IP has no remaining nodes, check for termination
 				if len(interleaved) == nodeNum {
+					// stop when 'interleaved' has accumulated all nodes
 					stop = true
-					break
+					continue
 				}
 			} else {
-				interleaved = append(interleaved, nodes[len(nodes)-1])
-				nodes = nodes[:len(nodes)-1]
+				// else, move one node from this IP to 'interleaved'
+				interleaved = append(interleaved, nodes[0])
+				ips[ip] = nodes[1:]
 			}
 		}
 	}
 
-	masters = interleaved[:mastersNum-1]
+	masters = interleaved[:mastersNum]
+	interleaved = interleaved[mastersNum:]
 	nodeNum -= mastersNum
 
 	for _, node := range masters {
-		logrus.Printf("  -> %s", node.InfoString())
+		logrus.Printf("  -> %s", node.String())
 	}
 
 	// Alloc slots on masters
@@ -171,7 +177,6 @@ func (self *RedisTrib) AllocSlots(repOpt int) {
 		first = last + 1
 		cursor += slotsPerNode
 	}
-
 	// Select N replicas for every master.
 	// We try to split the replicas among all the IPs with spare nodes
 	// trying to avoid the host where the master is running, if possible.
@@ -181,7 +186,74 @@ func (self *RedisTrib) AllocSlots(repOpt int) {
 	// remaining instances as extra replicas to masters.  Some masters
 	// may end up with more than their requested number of replicas, but
 	// all nodes will be used.
-	//assignVerbose = false
+	assignVerbose := false
+	assignedReplicas := 0
+	var slave *ClusterNode
+	var node *ClusterNode
+	types := []string{"required", "unused"}
 
+	for _, assign := range types {
+		for _, m := range masters {
+			assignedReplicas = 0
+			for assignedReplicas < self.ReplicasNum() {
+				if nodeNum == 0 {
+					break
+				}
+				if assignVerbose {
+					if assign == "required" {
+						logrus.Printf("Requesting total of %d replicas (%d replicas assigned so far with %d total remaining).",
+							self.ReplicasNum(), assignedReplicas, nodeNum)
+					} else if assign == "unused" {
+						logrus.Printf("Assigning extra instance to replication role too (%d remaining).", nodeNum)
+					}
+				}
+
+				// Return the first node not matching our current master
+				index := getNodeFromSlice(m, interleaved)
+				if index != -1 {
+					node = interleaved[index]
+				} else {
+					node = nil
+				}
+
+				// If we found a node, use it as a best-first match.
+				// Otherwise, we didn't find a node on a different IP, so we
+				// go ahead and use a same-IP replica.
+				if node != nil {
+					slave = node
+					interleaved = append(interleaved[:index], interleaved[index+1:]...)
+				} else {
+					slave, interleaved = interleaved[0], interleaved[1:]
+				}
+				slave.SetAsReplica(m.Name())
+				nodeNum -= 1
+				assignedReplicas += 1
+				logrus.Printf("Adding replica %s to %s", slave.String(), m.String())
+
+				// If we are in the "assign extra nodes" loop,
+				// we want to assign one extra replica to each
+				// master before repeating masters.
+				// This break lets us assign extra replicas to masters
+				// in a round-robin way.
+				if assign == "unused" {
+					break
+				}
+			}
+		}
+	}
 	return
+}
+
+func getNodeFromSlice(m *ClusterNode, nodes [](*ClusterNode)) (index int) {
+	if len(nodes) < 1 {
+		return -1
+	}
+
+	for i, node := range nodes {
+		if m.Host() != node.Host() {
+			return i
+		}
+	}
+
+	return -1
 }

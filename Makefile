@@ -27,7 +27,7 @@ validate:
 
 ## Run test case for this go project.
 test:
-	go list ./... | grep -v 'vendor' | xargs -L1 go test -v
+	go test -v ./...
 
 ## Clean everything (including stray volumes).
 clean:
