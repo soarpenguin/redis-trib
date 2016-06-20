@@ -255,20 +255,37 @@ func (self *RedisTrib) CheckOpenSlots() {
 // it seems more sensible.
 func (self *RedisTrib) FixOpenSlot(slot string) {
 	logrus.Printf(">>> Fixing open slot %s", slot)
-	// TODO: add fix open slot code here
 
 	// Try to obtain the current slot owner, according to the current
 	// nodes configuration.
+	var owner *ClusterNode
+	owners := self.GetSlotOwners(slot)
+	if len(owners) == 1 {
+		owner = owners[0]
+	}
+	// TODO: add fix open slot code here
+
+	// If there is no slot owner, set as owner the slot with the biggest
+	// number of keys, among the set of migrating / importing nodes.
+	if owner == nil {
+		logrus.Printf(">>> Nobody claims ownership, selecting an owner...")
+	}
 }
 
 // Return the owner of the specified slot
-func (self *RedisTrib) GetSlotOwners(slot int) [](*ClusterNode) {
+func (self *RedisTrib) GetSlotOwners(slot string) [](*ClusterNode) {
 	var owners [](*ClusterNode)
+
+	slotnum, err := strconv.Atoi(slot)
+	if err != nil {
+		return owners
+	}
+
 	for _, node := range self.nodes {
 		if node.HasFlag("slave") {
 			continue
 		}
-		if slot, ok := node.Slots()[slot]; ok {
+		if _, ok := node.Slots()[slotnum]; ok {
 			owners = append(owners, node)
 		}
 	}
