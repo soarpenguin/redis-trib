@@ -203,7 +203,6 @@ func (self *RedisTrib) WaitClusterJoin() bool {
 	logrus.Printf("Waiting for the cluster to join")
 
 	for {
-
 		if !self.isConfigConsistent() {
 			fmt.Printf(".")
 			time.Sleep(time.Second * 1)
@@ -257,6 +256,23 @@ func (self *RedisTrib) CheckOpenSlots() {
 func (self *RedisTrib) FixOpenSlot(slot string) {
 	logrus.Printf(">>> Fixing open slot %s", slot)
 	// TODO: add fix open slot code here
+
+	// Try to obtain the current slot owner, according to the current
+	// nodes configuration.
+}
+
+// Return the owner of the specified slot
+func (self *RedisTrib) GetSlotOwners(slot int) [](*ClusterNode) {
+	var owners [](*ClusterNode)
+	for _, node := range self.nodes {
+		if node.HasFlag("slave") {
+			continue
+		}
+		if slot, ok := node.Slots()[slot]; ok {
+			owners = append(owners, node)
+		}
+	}
+	return owners
 }
 
 func (self *RedisTrib) CheckSlotsCoverage() {
