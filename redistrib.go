@@ -250,46 +250,97 @@ func (self *RedisTrib) CheckOpenSlots() {
 	}
 }
 
+// Return the owner of the specified slot
+func (self *RedisTrib) GetSlotOwners(slot int) [](*ClusterNode) {
+	var owners [](*ClusterNode)
+
+	for _, node := range self.nodes {
+		if node.HasFlag("slave") {
+			continue
+		}
+		if _, ok := node.Slots()[slot]; ok {
+			owners = append(owners, node)
+		}
+	}
+	return owners
+}
+
+// Return the node, among 'nodes' with the greatest number of keys
+// in the specified slot.
+func (self *RedisTrib) GetNodeWithMostKeysInSlot(slot int) (node *ClusterNode) {
+	var best *ClusterNode
+	bestNumkeys := 0
+
+	for _, n := range self.nodes {
+		if n.HasFlag("slave") {
+			continue
+		}
+		if numkeys, err := n.ClusterCountKeysInSlot(slot); err == nil {
+			if numkeys > bestNumkeys || best == nil {
+				best = n
+				bestNumkeys = numkeys
+			}
+		}
+	}
+	return best
+}
+
 // Slot 'slot' was found to be in importing or migrating state in one or
 // more nodes. This function fixes this condition by migrating keys where
 // it seems more sensible.
 func (self *RedisTrib) FixOpenSlot(slot string) {
 	logrus.Printf(">>> Fixing open slot %s", slot)
 
+	slotnum, err := strconv.Atoi(slot)
+	if err != nil {
+		logrus.Warnf("Bad slot num: \"%s\" for FixOpenSlot!", slot)
+	}
+
 	// Try to obtain the current slot owner, according to the current
 	// nodes configuration.
 	var owner *ClusterNode
-	owners := self.GetSlotOwners(slot)
+	owners := self.GetSlotOwners(slotnum)
 	if len(owners) == 1 {
 		owner = owners[0]
 	}
-	// TODO: add fix open slot code here
+
+	var migrating [](*ClusterNode)
+	var importing [](*ClusterNode)
+	for _, node := range self.nodes {
+		if node.HasFlag("slave") {
+			continue
+		}
+
+		if _, ok := node.Migrating()[slotnum]; ok {
+			migrating = append(migrating, node)
+		} else if _, ok := node.Importing()[slotnum]; ok {
+			importing = append(importing, node)
+		} else {
+			// TODO: fix countkeysinslot
+			num, _ := node.ClusterCountKeysInSlot(slotnum)
+			if num > 0 && node != owner {
+				logrus.Printf("*** Found keys about slot %s in node %s!", slot, node.String())
+				importing = append(importing, node)
+			}
+		}
+	}
+	logrus.Printf("Set as migrating in: %s", ClusterNodeArray2String(migrating))
+	logrus.Printf("Set as importing in: %s", ClusterNodeArray2String(importing))
 
 	// If there is no slot owner, set as owner the slot with the biggest
 	// number of keys, among the set of migrating / importing nodes.
 	if owner == nil {
 		logrus.Printf(">>> Nobody claims ownership, selecting an owner...")
-	}
-}
+		owner = self.GetNodeWithMostKeysInSlot(slotnum)
 
-// Return the owner of the specified slot
-func (self *RedisTrib) GetSlotOwners(slot string) [](*ClusterNode) {
-	var owners [](*ClusterNode)
-
-	slotnum, err := strconv.Atoi(slot)
-	if err != nil {
-		return owners
-	}
-
-	for _, node := range self.nodes {
-		if node.HasFlag("slave") {
-			continue
+		// If we still don't have an owner, we can't fix it.
+		if owner == nil {
+			logrus.Fatalf("[ERR] Can't select a slot owner. Impossible to fix.")
 		}
-		if _, ok := node.Slots()[slotnum]; ok {
-			owners = append(owners, node)
-		}
+
+		// TODO: add fix open slot code here
+		// Use ADDSLOTS to assign the slot.
 	}
-	return owners
 }
 
 func (self *RedisTrib) CheckSlotsCoverage() {

@@ -93,6 +93,20 @@ func Round(num float64) int {
 	return int(num + math.Copysign(0.5, num))
 }
 
+func ClusterNodeArray2String(nodes [](*ClusterNode)) (result string) {
+	for _, node := range nodes {
+		if node != nil {
+			result += node.String() + ","
+		}
+	}
+
+	if len(result) > 0 {
+		strings.TrimRight(result, ",")
+	}
+
+	return result
+}
+
 /* CRC16 implementation according to CCITT standards.
  *
  * Note by @antirez: this is actually the XMODEM CRC 16 algorithm, using the
