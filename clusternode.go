@@ -218,6 +218,10 @@ func (self *ClusterNode) ClusterCountKeysInSlot(slot int) (int, error) {
 	return redis.Int(self.Call("countkeysinslot", slot))
 }
 
+func (self *ClusterNode) ClusterSetSlotStable(slot int) (string, error) {
+	return redis.String(self.Call("CLUSTER", "setslot", slot, "stable"))
+}
+
 func (self *ClusterNode) AssertCluster() bool {
 	info, err := redis.String(self.Call("INFO", "cluster"))
 	if err != nil ||

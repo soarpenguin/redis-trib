@@ -340,6 +340,41 @@ func (self *RedisTrib) FixOpenSlot(slot string) {
 
 		// TODO: add fix open slot code here
 		// Use ADDSLOTS to assign the slot.
+		logrus.Printf("*** Configuring %s as the slot owner", owner.String())
+		owner.ClusterSetSlotStable(slotnum)
+		owner.ClusterAddSlots(slotnum)
+		// Make sure this information will propagate. Not strictly needed
+		// since there is no past owner, so all the other nodes will accept
+		// whatever epoch this node will claim the slot with.
+		//owner.r.cluster("bumpepoch")
+
+		// Remove the owner from the list of migrating/importing
+		// nodes.
+		//migrating.delete(owner)
+		//importing.delete(owner)
+	}
+
+	// If there are multiple owners of the slot, we need to fix it
+	// so that a single node is the owner and all the other nodes
+	// are in importing state. Later the fix can be handled by one
+	// of the base cases above.
+	//
+	// Note that this case also covers multiple nodes having the slot
+	// in migrating state, since migrating is a valid state only for
+	// slot owners.
+	if len(owners) > 1 {
+		owner = self.GetNodeWithMostKeysInSlot(slotnum)
+		for _, node := range owners {
+			if node == owner {
+				continue
+			}
+
+			//node.ClusterDelSlots(slotnum)
+			//n.r.cluster('setslot',slot,'importing',owner.info[:name])
+			//importing.delete(n) # Avoid duplciates
+			//importing << n
+		}
+		//owner.r.cluster('bumpepoch')
 	}
 }
 
