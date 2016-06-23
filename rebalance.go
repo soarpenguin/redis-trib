@@ -24,10 +24,10 @@ var rebalanceCommand = cli.Command{
 	Usage:     "rebalance a redis cluster.",
 	ArgsUsage: `host:port`,
 	Flags: []cli.Flag{
-		cli.StringFlag{
+		cli.StringSliceFlag{
 			Name:  "weight",
-			Value: "",
-			Usage: "Specifies per redis weight.",
+			Value: &cli.StringSlice{},
+			Usage: "Specifies per redis node weight, muti times allowed.",
 		},
 		cli.BoolFlag{
 			Name:  "auto-weights",
@@ -50,11 +50,6 @@ var rebalanceCommand = cli.Command{
 			Value: MigrateDefaultPipeline,
 			Usage: `Pipeline for rebalance redis cluster.`,
 		},
-		cli.StringFlag{
-			Name:  "replicas, r",
-			Value: "",
-			Usage: `Slave number for every master created, the default value is none.`,
-		},
 		cli.IntFlag{
 			Name:  "threshold",
 			Value: RebalanceDefaultThreshold,
@@ -67,7 +62,6 @@ var rebalanceCommand = cli.Command{
 		}
 		rt := NewRedisTrib()
 		if err := rt.RebalanceClusterCmd(context); err != nil {
-			//logrus.Errorf("%p", err)
 			return err
 		}
 		return nil
@@ -91,7 +85,7 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	//autoweights := context.Bool("auto-weights")
 	weights := make(map[string]int)
 	if context.String("weight") != "" {
-		ws := strings.Split(context.String("weight"), ",")
+		ws := context.StringSlice("weight")
 		for _, e := range ws {
 			if e != "" && strings.Contains(e, "=") {
 				s := strings.Split(e, "=")
@@ -145,7 +139,6 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 			if node.Weight() == 0 {
 				continue
 			}
-			// TODO: add Calculate code.
 			expected := int((float64(ClusterHashSlots) / float64(totalWeight)) * float64(node.Weight()))
 			node.SetBalance(len(node.Slots()) - expected)
 			// Compute the percentage of difference between the
@@ -185,6 +178,7 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	// Because of rounding, it is possible that the balance of all nodes
 	// summed does not give 0. Make sure that nodes that have to provide
 	// slots are always matched by nodes receiving slots.
+	// TODO: add Calculate code.
 	//total_balance = sn.map{|x| x.info[:balance]}.reduce{|a,b| a+b}
 	//while total_balance > 0
 	//    sn.each{|n|
@@ -202,8 +196,23 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 
 	logrus.Printf(">>> Rebalancing across %d nodes. Total weight = %d", nodesInvolved, totalWeight)
 
+	// TODO:
 	if context.GlobalBool("verbose") {
 
 	}
+
+	// Now we have at the start of the 'sn' array nodes that should get
+	// slots, at the end nodes that must give slots.
+	// We take two indexes, one at the start, and one at the end,
+	// incrementing or decrementing the indexes accordingly til we
+	// find nodes that need to get/provide slots.
+	// TODO:
+	// dstIdx := 0
+	// srcIdx := len(sn) - 1
+
+	//for dstIdx < srcIdx {
+
+	//}
+
 	return nil
 }
