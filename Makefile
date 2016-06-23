@@ -1,12 +1,14 @@
 default: help
 
 COMMIT := $(shell git rev-parse HEAD 2> /dev/null || true)
-REDIS_LINK := $(CURDIR)/Godeps/_workspace/src/github.com/soarpenguin/redis-trib
+GITHUB_SRC := github.com/soarpenguin
+MODULE := redis-trib
+REDIS_LINK := $(CURDIR)/Godeps/_workspace/src/$(GITHUB_SRC)
 export GOPATH := $(CURDIR)/Godeps/_workspace
 #GOPATH := $(shell godep path):${GOPATH}
 
 ## Make bin for redis-trib.
-bin:
+bin: $(REDIS_LINK)
 	go build -i -ldflags "-X main.gitCommit=${COMMIT}" -o redis-trib .
 
 godep:
@@ -14,7 +16,8 @@ godep:
 	godep restore
 
 $(REDIS_LINK):
-	ln -sfn $(CURDIR) $(REDIS_LINK)
+	mkdir -p ${REDIS_LINK}
+	ln -sfn $(CURDIR) $(REDIS_LINK)/$(MODULE)
 
 ## Get vet go tools.
 vet:
