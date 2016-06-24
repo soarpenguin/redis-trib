@@ -62,16 +62,17 @@ func (self *RedisTrib) SetReplicasNum(replicasNum int) {
 	self.replicasNum = replicasNum
 }
 
+// Return the node with the specified ID or Nil.
 func (self *RedisTrib) GetNodeByName(name string) (node *ClusterNode) {
 	for _, node := range self.nodes {
-		if strToLower(node.Info().name) == strToLower(name) {
+		if strToLower(node.Name()) == strToLower(name) {
 			return node
 		}
 	}
 	return nil
 }
 
-// Like get_node_by_name but the specified name can be just the first
+// Like GetNodeByName but the specified name can be just the first
 // part of the node ID as long as the prefix in unique across the
 // cluster.
 func (self *RedisTrib) GetNodeByAbbreviatedName(name string) (n *ClusterNode) {
@@ -189,8 +190,8 @@ func (self *RedisTrib) isConfigConsistent() bool {
 		} else {
 			newSig := node.GetConfigSignature()
 			if oldSig != newSig {
-				logrus.Errorf("Signatures don't match. Error in Config.")
-				logrus.Errorf("Error came up when checking node %s", node.String())
+				//logrus.Errorf("Signatures don't match. Error in Config.")
+				//logrus.Errorf("Error came up when checking node %s", node.String())
 				clean = false
 				break
 			}

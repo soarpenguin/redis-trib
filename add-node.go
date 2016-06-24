@@ -53,6 +53,7 @@ func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 	}
 
 	logrus.Printf(">>> Adding node %s to cluster %s", newaddr, addr)
+	// Check the existing cluster
 	// Load cluster information
 	if err := self.LoadClusterInfoFromNode(addr); err != nil {
 		return err
@@ -94,6 +95,8 @@ func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 		logrus.Fatalf("Add new node %s failed: %s!", newaddr, err.Error())
 	}
 
+	// Additional configuration is needed if the node is added as
+	// a slave.
 	if context.Bool("slave") {
 		self.WaitClusterJoin()
 		logrus.Printf(">>> Configure node as replica of %s.", master.String())
