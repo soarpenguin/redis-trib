@@ -412,15 +412,14 @@ func (self *RedisTrib) LoadClusterInfoFromNode(addr string) error {
 		logrus.Fatalf("Node %s is not configured as a cluster node.", node.String())
 	}
 	if err := node.LoadInfo(true); err != nil {
-		//logrus.Fatalf("Load info from node %s failed.", node)
 		return fmt.Errorf("Load info from node %s failed.", node)
 	}
 	self.AddNode(node)
 
 	for _, n := range node.Friends() {
-		//if n.HasFlag("noaddr") || n.HasFlag("disconnected") || n.HasFlag("fail") {
-		//	continue
-		//}
+		if n.HasFlag("noaddr") || n.HasFlag("disconnected") || n.HasFlag("fail") {
+			continue
+		}
 
 		fnode := NewClusterNode(n.String())
 		fnode.Connect(false)
