@@ -225,7 +225,7 @@ func (self *RedisTrib) AllocSlots() {
 				} else {
 					slave, interleaved = interleaved[0], interleaved[1:]
 				}
-				slave.SetAsReplica(m.Name())
+				slave.SetReplicate(m.Name())
 				nodeNum -= 1
 				assignedReplicas += 1
 				logrus.Printf("Adding replica %s to %s", slave.String(), m.String())

@@ -6,9 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	//"time"
 
-	//"github.com/gosexy/redis"
 	"github.com/Sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
 )
@@ -86,18 +84,6 @@ func NewClusterNode(addr string) (node *ClusterNode) {
 	return node
 }
 
-func (self *ClusterNode) Friends() []*NodeInfo {
-	return self.friends
-}
-
-func (self *ClusterNode) ReplicasNodes() []*ClusterNode {
-	return self.replicasNodes
-}
-
-func (self *ClusterNode) AddReplicasNode(node *ClusterNode) {
-	self.replicasNodes = append(self.replicasNodes, node)
-}
-
 func (self *ClusterNode) Host() string {
 	return self.info.host
 }
@@ -108,6 +94,24 @@ func (self *ClusterNode) Port() uint {
 
 func (self *ClusterNode) Name() string {
 	return self.info.name
+}
+
+func (self *ClusterNode) HasFlag(flag string) bool {
+	for _, f := range self.info.flags {
+		if strings.Contains(f, flag) {
+			return true
+		}
+	}
+	return false
+}
+
+func (self *ClusterNode) Replicate() string {
+	return self.info.replicate
+}
+
+func (self *ClusterNode) SetReplicate(nodeId string) {
+	self.info.replicate = nodeId
+	self.dirty = true
 }
 
 func (self *ClusterNode) Weight() int {
@@ -134,13 +138,28 @@ func (self *ClusterNode) Importing() map[int]string {
 	return self.info.importing
 }
 
-func (self *ClusterNode) HasFlag(flag string) bool {
-	for _, f := range self.info.flags {
-		if strings.Contains(f, flag) {
-			return true
-		}
-	}
-	return false
+func (self *ClusterNode) R() redis.Conn {
+	return self.r
+}
+
+func (self *ClusterNode) Info() *NodeInfo {
+	return self.info
+}
+
+func (self *ClusterNode) IsDirty() bool {
+	return self.dirty
+}
+
+func (self *ClusterNode) Friends() []*NodeInfo {
+	return self.friends
+}
+
+func (self *ClusterNode) ReplicasNodes() []*ClusterNode {
+	return self.replicasNodes
+}
+
+func (self *ClusterNode) AddReplicasNode(node *ClusterNode) {
+	self.replicasNodes = append(self.replicasNodes, node)
 }
 
 func (self *ClusterNode) String() string {
@@ -215,7 +234,7 @@ func (self *ClusterNode) ClusterNodeShutdown() (err error) {
 }
 
 func (self *ClusterNode) ClusterCountKeysInSlot(slot int) (int, error) {
-	return redis.Int(self.Call("countkeysinslot", slot))
+	return redis.Int(self.Call("CLUSTER", "countkeysinslot", slot))
 }
 
 func (self *ClusterNode) ClusterSetSlotStable(slot int) (string, error) {
@@ -315,11 +334,6 @@ func (self *ClusterNode) AddSlots(start, end int) {
 	for i := start; i <= end; i++ {
 		self.info.slots[i] = NewHashSlot
 	}
-	self.dirty = true
-}
-
-func (self *ClusterNode) SetAsReplica(nodeId string) {
-	self.info.replicate = nodeId
 	self.dirty = true
 }
 
@@ -426,20 +440,4 @@ func (self *ClusterNode) GetConfigSignature() string {
 
 	sort.Strings(config)
 	return strings.Join(config, "|")
-}
-
-func (self *ClusterNode) Info() *NodeInfo {
-	return self.info
-}
-
-func (self *ClusterNode) IsDirty() bool {
-	return self.dirty
-}
-
-func (self *ClusterNode) R() redis.Conn {
-	return self.r
-}
-
-func (self *ClusterNode) Replicate() string {
-	return self.info.replicate
 }

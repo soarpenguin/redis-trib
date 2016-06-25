@@ -407,10 +407,7 @@ func (self *RedisTrib) CoveredSlots() map[int]int {
 func (self *RedisTrib) LoadClusterInfoFromNode(addr string) error {
 	node := NewClusterNode(addr)
 
-	if err := node.Connect(true); err != nil {
-		return err
-	}
-
+	node.Connect(true)
 	if !node.AssertCluster() {
 		logrus.Fatalf("Node %s is not configured as a cluster node.", node.String())
 	}
@@ -449,9 +446,10 @@ func (self *RedisTrib) PopulateNodesReplicasInfo() {
 			master := self.GetNodeByName(node.Replicate())
 			if master == nil {
 				logrus.Warnf("*** %s claims to be slave of unknown node ID %s.", node.String(), node.Replicate())
+			} else {
+				// append master to node.replicate array
+				master.AddReplicasNode(node)
 			}
-			// append master to node.replicate array
-			master.AddReplicasNode(node)
 		}
 	}
 }
