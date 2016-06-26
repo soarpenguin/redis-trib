@@ -46,6 +46,10 @@ func (self *RedisTrib) ResetNodes() {
 	self.nodes = []*ClusterNode{}
 }
 
+func (self *RedisTrib) SetFix(fix bool) {
+	self.fix = fix
+}
+
 func (self *RedisTrib) ClusterError(err string) {
 	self.errors = append(self.errors, errors.New(err))
 	logrus.Errorf(err)

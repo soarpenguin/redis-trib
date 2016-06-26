@@ -37,6 +37,7 @@ func (self *RedisTrib) FixClusterCmd(context *cli.Context) error {
 		return errors.New("Please check host:port for fix command.")
 	}
 
+	self.SetFix(true)
 	if err := self.LoadClusterInfoFromNode(addr); err != nil {
 		return err
 	}
