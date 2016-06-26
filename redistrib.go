@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -215,57 +216,6 @@ func (self *RedisTrib) WaitClusterJoin() bool {
 	return true
 }
 
-func (self *RedisTrib) CheckOpenSlots() {
-	logrus.Printf(">>> Check for open slots...")
-	// add check open slots code.
-	var openSlots []string
-
-	for _, node := range self.nodes {
-		if len(node.Migrating()) > 0 {
-			keys := make([]string, len(node.Migrating()))
-			for k, _ := range node.Migrating() {
-				keys = append(keys, strconv.Itoa(k))
-			}
-			self.ClusterError(fmt.Sprintf("Node %s has slots in migrating state (%s).",
-				node.String(), strings.Join(keys, ",")))
-			openSlots = append(openSlots, keys...)
-		}
-		if len(node.Importing()) > 0 {
-			keys := make([]string, len(node.Importing()))
-			for k, _ := range node.Importing() {
-				keys = append(keys, strconv.Itoa(k))
-			}
-			self.ClusterError(fmt.Sprintf("Node %s has slots in importing state (%s).",
-				node.String(), strings.Join(keys, ",")))
-			openSlots = append(openSlots, keys...)
-		}
-	}
-	uniq := Uniq(openSlots)
-	if len(uniq) > 0 {
-		logrus.Warnf("The following slots are open: %s", strings.Join(uniq, ", "))
-	}
-	if self.fix {
-		for _, slot := range uniq {
-			self.FixOpenSlot(slot)
-		}
-	}
-}
-
-// Return the owner of the specified slot
-func (self *RedisTrib) GetSlotOwners(slot int) [](*ClusterNode) {
-	var owners [](*ClusterNode)
-
-	for _, node := range self.nodes {
-		if node.HasFlag("slave") {
-			continue
-		}
-		if _, ok := node.Slots()[slot]; ok {
-			owners = append(owners, node)
-		}
-	}
-	return owners
-}
-
 // Return the node, among 'nodes' with the greatest number of keys
 // in the specified slot.
 func (self *RedisTrib) GetNodeWithMostKeysInSlot(slot int) (node *ClusterNode) {
@@ -379,18 +329,6 @@ func (self *RedisTrib) FixOpenSlot(slot string) {
 	}
 }
 
-func (self *RedisTrib) CheckSlotsCoverage() {
-	logrus.Printf(">>> Check slots coverage...")
-	slots := self.CoveredSlots()
-	// add check open slots code.
-	if len(slots) == ClusterHashSlots {
-		logrus.Printf("[OK] All %d slots covered.", ClusterHashSlots)
-	} else {
-		self.ClusterError(fmt.Sprintf("Not all %d slots are covered by nodes.", ClusterHashSlots))
-		// TODO: fix_slots_coverage if @fix
-	}
-}
-
 // Merge slots of every known node. If the resulting slots are equal
 // to ClusterHashSlots, then all slots are served.
 func (self *RedisTrib) CoveredSlots() map[int]int {
@@ -402,6 +340,187 @@ func (self *RedisTrib) CoveredSlots() map[int]int {
 		}
 	}
 	return slots
+}
+
+func (self *RedisTrib) NotCoveredSlots() []int {
+	index := 0
+	slots := []int{}
+	coveredSlots := self.CoveredSlots()
+
+	for index <= ClusterHashSlots {
+		if _, ok := coveredSlots[index]; !ok {
+			slots = append(slots, index)
+		}
+	}
+	return slots
+}
+
+func (self *RedisTrib) CheckSlotsCoverage() {
+	logrus.Printf(">>> Check slots coverage...")
+	slots := self.CoveredSlots()
+	// add check open slots code.
+	if len(slots) == ClusterHashSlots {
+		logrus.Printf("[OK] All %d slots covered.", ClusterHashSlots)
+	} else {
+		self.ClusterError(fmt.Sprintf("Not all %d slots are covered by nodes.", ClusterHashSlots))
+		if self.fix {
+			self.FixSlotsCoverage()
+		}
+	}
+}
+
+func (self *RedisTrib) CheckOpenSlots() {
+	logrus.Printf(">>> Check for open slots...")
+	// add check open slots code.
+	var openSlots []string
+
+	for _, node := range self.nodes {
+		if len(node.Migrating()) > 0 {
+			keys := make([]string, len(node.Migrating()))
+			for k, _ := range node.Migrating() {
+				keys = append(keys, strconv.Itoa(k))
+			}
+			self.ClusterError(fmt.Sprintf("Node %s has slots in migrating state (%s).",
+				node.String(), strings.Join(keys, ",")))
+			openSlots = append(openSlots, keys...)
+		}
+		if len(node.Importing()) > 0 {
+			keys := make([]string, len(node.Importing()))
+			for k, _ := range node.Importing() {
+				keys = append(keys, strconv.Itoa(k))
+			}
+			self.ClusterError(fmt.Sprintf("Node %s has slots in importing state (%s).",
+				node.String(), strings.Join(keys, ",")))
+			openSlots = append(openSlots, keys...)
+		}
+	}
+	uniq := Uniq(openSlots)
+	if len(uniq) > 0 {
+		logrus.Warnf("The following slots are open: %s", strings.Join(uniq, ", "))
+	}
+	if self.fix {
+		for _, slot := range uniq {
+			self.FixOpenSlot(slot)
+		}
+	}
+}
+
+func (self *RedisTrib) NodesWithKeysInSlot(slot int) (nodes [](*ClusterNode)) {
+	for _, node := range self.nodes {
+		if node.HasFlag("slave") {
+			continue
+		}
+
+		ret, err := node.ClusterGetKeysInSlot(slot)
+		if err == nil && len(ret) > 0 {
+			nodes = append(nodes, node)
+		}
+	}
+	return nodes
+}
+
+func (self *RedisTrib) FixSlotsCoverage() {
+	notCovered := self.NotCoveredSlots()
+
+	logrus.Printf(">>> Fixing slots coverage...")
+	//logrus.Printf("List of not covered slots: %s", strings.Join(notCovered, ","))
+
+	// TODO: fix_slots_coverage
+	// For every slot, take action depending on the actual condition:
+	// 1) No node has keys for this slot.
+	// 2) A single node has keys for this slot.
+	// 3) Multiple nodes have keys for this slot.
+	slots := make(map[int][](*ClusterNode))
+	for _, slot := range notCovered {
+		nodes := self.NodesWithKeysInSlot(slot)
+		slots[slot] = append(slots[slot], nodes...)
+		var nodesStr string
+		for _, node := range nodes {
+			nodesStr = nodesStr + node.String() + ","
+		}
+		logrus.Printf("Slot %d has keys in %d nodes: %s", slot, len(nodes), nodesStr)
+	}
+
+	none := []int{}
+	single := []int{}
+	multi := []int{}
+	for index, nodes := range slots {
+		if len(nodes) == 0 {
+			none = append(none, index)
+		} else if len(nodes) == 1 {
+			single = append(single, index)
+		} else if len(nodes) > 1 {
+			multi = append(multi, index)
+		}
+	}
+
+	// Handle case "1": keys in no node.
+	if len(none) > 0 {
+		result := NumArray2String(none)
+		logrus.Printf("The folowing uncovered slots have no keys across the cluster: %s", result)
+		YesOrDie("Fix these slots by covering with a random node?")
+		for _, slot := range none {
+			node := self.nodes[rand.Intn(len(self.nodes))]
+			logrus.Printf(">>> Covering slot %d with %s.", slot, node.String())
+			node.ClusterAddSlots(slot)
+		}
+	}
+
+	// Handle case "2": keys only in one node.
+	if len(single) > 0 {
+		result := NumArray2String(single)
+		logrus.Printf("The folowing uncovered slots have keys in just one node: %s", result)
+		YesOrDie("Fix these slots by covering with those nodes?")
+		for _, slot := range single {
+			node := slots[slot][0]
+			logrus.Printf(">>> Covering slot %d with %s", slot, node.String())
+			node.ClusterAddSlots(slot)
+		}
+	}
+
+	// Handle case "3": keys in multiple nodes.
+	if len(multi) > 0 {
+		result := NumArray2String(multi)
+		logrus.Printf("The folowing uncovered slots have keys in multiple nodes: %s", result)
+		YesOrDie("Fix these slots by moving keys into a single node?")
+		for _, slot := range multi {
+			target := self.GetNodeWithMostKeysInSlot(slot)
+			if target != nil {
+				logrus.Printf(">>> Covering slot %d moving keys to %s", slot, target.String())
+				target.ClusterAddSlots(slot)
+				target.ClusterSetSlotStable(slot)
+				nodes := slots[slot]
+				for _, node := range nodes {
+					if node == target {
+						continue
+					}
+
+					// TODO:
+					// Set the source node in 'importing' state (even if we will
+					// actually migrate keys away) in order to avoid receiving
+					// redirections for MIGRATE.
+					//src.r.cluster('setslot',slot,'importing',target.info[:name])
+					//move_slot(src,target,slot,:dots=>true,:fix=>true,:cold=>true)
+					node.ClusterAddSlots(slot)
+				}
+			}
+		}
+	}
+}
+
+// Return the owner of the specified slot
+func (self *RedisTrib) GetSlotOwners(slot int) [](*ClusterNode) {
+	var owners [](*ClusterNode)
+
+	for _, node := range self.nodes {
+		if node.HasFlag("slave") {
+			continue
+		}
+		if _, ok := node.Slots()[slot]; ok {
+			owners = append(owners, node)
+		}
+	}
+	return owners
 }
 
 func (self *RedisTrib) LoadClusterInfoFromNode(addr string) error {

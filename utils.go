@@ -107,6 +107,19 @@ func ClusterNodeArray2String(nodes [](*ClusterNode)) (result string) {
 	return result
 }
 
+func NumArray2String(nums []int) (result string) {
+	if len(nums) > 0 {
+		result = fmt.Sprintf("%d", nums[0])
+		for _, id := range nums[1:] {
+			result += fmt.Sprintf("%s,%d", result, id)
+		}
+		if len(result) > 0 {
+			strings.TrimRight(result, ",")
+		}
+	}
+	return result
+}
+
 /* CRC16 implementation according to CCITT standards.
  *
  * Note by @antirez: this is actually the XMODEM CRC 16 algorithm, using the
