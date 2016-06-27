@@ -59,6 +59,14 @@ func (self *RedisTrib) Errors() []error {
 	return self.errors
 }
 
+func (self *RedisTrib) Timeout() int {
+	return self.timeout
+}
+
+func (self *RedisTrib) SetTimeout(timeout int) {
+	self.timeout = timeout
+}
+
 func (self *RedisTrib) ReplicasNum() int {
 	return self.replicasNum
 }

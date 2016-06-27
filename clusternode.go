@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
@@ -173,7 +174,7 @@ func (self *ClusterNode) Connect(abort bool) (err error) {
 
 	addr := fmt.Sprintf("%s:%d", self.info.host, self.info.port)
 	//client, err := redis.DialTimeout("tcp", addr, 0, 1*time.Second, 1*time.Second)
-	client, err := redis.Dial("tcp", addr)
+	client, err := redis.Dial("tcp", addr, redis.DialConnectTimeout(60*time.Second))
 	if err != nil {
 		if abort {
 			logrus.Fatalf("Sorry, connect to node %s failed in abort mode", addr)

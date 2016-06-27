@@ -14,6 +14,7 @@ var fixCommand = cli.Command{
 	Flags: []cli.Flag{
 		cli.IntFlag{
 			Name:  "timeout, t",
+			Value: MigrateDefaultTimeout,
 			Usage: `timeout for fix the redis cluster.`,
 		},
 	},
@@ -38,6 +39,8 @@ func (self *RedisTrib) FixClusterCmd(context *cli.Context) error {
 	}
 
 	self.SetFix(true)
+	timeout := context.Int("timeout")
+	self.SetTimeout(timeout)
 	if err := self.LoadClusterInfoFromNode(addr); err != nil {
 		return err
 	}
