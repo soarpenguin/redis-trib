@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 )
@@ -33,7 +35,7 @@ func (self *RedisTrib) CallClusterCmd(context *cli.Context) error {
 		return err
 	}
 
-	cmd := context.Args().Get(1)
+	cmd := strings.ToUpper(context.Args().Get(1))
 	cmdArgs := ToInterfaceArray(context.Args()[2:])
 
 	logrus.Printf(">>> Calling %s %s", cmd, cmdArgs)
