@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"strconv"
 
 	"github.com/Sirupsen/logrus"
@@ -14,34 +13,30 @@ var setTimeoutCommand = cli.Command{
 	Usage:     "set timeout configure for redis cluster.",
 	ArgsUsage: `host:port milliseconds`,
 	Action: func(context *cli.Context) error {
-		var addr string
-
 		if len(context.Args()) < 2 {
 			logrus.Fatalf("Must provide \"host:port milliseconds\" for set-timeout command!")
 		}
 
-		if addr = context.Args().Get(0); addr == "" {
-			logrus.Fatalf("Please check host:port for info command!")
-		}
-		timeout := context.Args().Get(1)
-		milliseconds, err := strconv.ParseInt(timeout, 0, 32)
-		if err != nil {
-			logrus.Fatalf("Please check the timeout format is number.")
-		} else if milliseconds < 100 {
-			logrus.Fatalf("Setting a node timeout of less than 100 milliseconds is a bad idea.")
-		}
-
 		rt := NewRedisTrib()
-		if err := rt.SetTimeoutClusterCmd(addr, int(milliseconds)); err != nil {
+		if err := rt.SetTimeoutClusterCmd(context); err != nil {
 			return err
 		}
 		return nil
 	},
 }
 
-func (self *RedisTrib) SetTimeoutClusterCmd(addr string, millisec int) error {
-	if addr == "" {
-		return errors.New("Please check host:port for set-timeout command.")
+func (self *RedisTrib) SetTimeoutClusterCmd(context *cli.Context) error {
+	var addr string
+	if addr = context.Args().Get(0); addr == "" {
+		logrus.Fatalf("Please check host:port for info command!")
+	}
+
+	timeout := context.Args().Get(1)
+	millisec, err := strconv.ParseInt(timeout, 0, 32)
+	if err != nil {
+		logrus.Fatalf("Please check the timeout format is number: %s", err.Error())
+	} else if millisec < 100 {
+		logrus.Fatalf("Setting a node timeout of less than 100 milliseconds is a bad idea.")
 	}
 
 	if err := self.LoadClusterInfoFromNode(addr); err != nil {
