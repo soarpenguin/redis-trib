@@ -309,7 +309,7 @@ func (self *RedisTrib) FixOpenSlot(slot string) {
 		// Make sure this information will propagate. Not strictly needed
 		// since there is no past owner, so all the other nodes will accept
 		// whatever epoch this node will claim the slot with.
-		//owner.r.cluster("bumpepoch")
+		owner.ClusterBumpepoch()
 
 		// Remove the owner from the list of migrating/importing
 		// nodes.
@@ -332,12 +332,12 @@ func (self *RedisTrib) FixOpenSlot(slot string) {
 				continue
 			}
 
-			//node.ClusterDelSlots(slotnum)
+			node.ClusterDelSlots(slotnum)
 			//n.r.cluster('setslot',slot,'importing',owner.info[:name])
 			//importing.delete(n) # Avoid duplciates
 			//importing << n
 		}
-		//owner.r.cluster('bumpepoch')
+		owner.ClusterBumpepoch()
 	}
 }
 

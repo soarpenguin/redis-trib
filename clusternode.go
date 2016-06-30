@@ -376,6 +376,15 @@ func (self *ClusterNode) ClusterAddSlots(args ...interface{}) (ret string, err e
 	return redis.String(self.Call("CLUSTER", "addslots", args))
 }
 
+// XXX: check the error for call CLUSTER delslots
+func (self *ClusterNode) ClusterDelSlots(args ...interface{}) (ret string, err error) {
+	return redis.String(self.Call("CLUSTER", "delslots", args))
+}
+
+func (self *ClusterNode) ClusterBumpepoch() (ret string, err error) {
+	return redis.String(self.Call("CLUSTER", "bumpepoch"))
+}
+
 func (self *ClusterNode) InfoString() (result string) {
 	var role = "M"
 
