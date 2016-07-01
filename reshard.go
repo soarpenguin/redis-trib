@@ -221,7 +221,7 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 	//reshardTable := ComputeReshardTable(sources, numSlots)
 	logrus.Printf("  Resharding plan:")
 	// TODO: ShowReshardTable
-	//show_reshard_table(reshard_table)
+	//ShowReshardTable(reshardTable)
 
 	if !context.Bool("yes") {
 		fmt.Printf("Do you want to proceed with the proposed reshard plan (yes/no)? ")
@@ -241,6 +241,9 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 	return nil
 }
 
+// Given a list of source nodes return a "resharding plan"
+// with what slots to move in order to move "numslots" slots to another
+// instance.
 func ComputeReshardTable(sources []interface{}, numSlots int) []ClusterNode {
 	// Sort from bigger to smaller instance, for two reasons:
 	// 1) If we take less slots than instances it is better to start
@@ -250,4 +253,8 @@ func ComputeReshardTable(sources []interface{}, numSlots int) []ClusterNode {
 	//    slots, we take 4 from the first, and 3 from the rest. So the
 	//    biggest is always the first.
 	return nil
+}
+
+func ShowReshardTable(table []*ClusterNode) {
+	// TODO: show reshard table
 }
