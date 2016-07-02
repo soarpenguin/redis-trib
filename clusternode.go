@@ -347,9 +347,9 @@ func (self *ClusterNode) FlushNodeConfig() {
 		return
 	}
 
-	if self.info.replicate != "" {
+	if self.Replicate() != "" {
 		// run replicate cmd
-		if _, err := self.ClusterReplicateWithNodeID(self.info.replicate); err != nil {
+		if _, err := self.ClusterReplicateWithNodeID(self.Replicate()); err != nil {
 			// If the cluster did not already joined it is possible that
 			// the slave does not know the master node yet. So on errors
 			// we return ASAP leaving the dirty flag set, to flush the
@@ -400,7 +400,7 @@ func (self *ClusterNode) InfoString() (result string) {
 	sort.Ints(keys)
 	slotstr := MergeNumArray2NumRange(keys)
 
-	if self.info.replicate != "" && self.dirty {
+	if self.Replicate() != "" && self.dirty {
 		result = fmt.Sprintf("S: %s %s", self.info.name, self.String())
 	} else {
 		// fix myself flag not the first element of []slots
@@ -408,8 +408,8 @@ func (self *ClusterNode) InfoString() (result string) {
 			role, self.info.name, self.String(), slotstr, len(self.Slots()), strings.Join(self.info.flags[1:], ","))
 	}
 
-	if self.info.replicate != "" {
-		result = result + fmt.Sprintf("\n\t   replicates %s", self.info.replicate)
+	if self.Replicate() != "" {
+		result = result + fmt.Sprintf("\n\t   replicates %s", self.Replicate())
 	} else {
 		result = result + fmt.Sprintf("\n\t   %d additional replica(s)", len(self.replicasNodes))
 	}
