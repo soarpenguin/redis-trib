@@ -123,6 +123,10 @@ func (self *ClusterNode) SetWeight(w int) {
 	self.info.weight = w
 }
 
+func (self *ClusterNode) Balance() int {
+	return self.info.balance
+}
+
 func (self *ClusterNode) SetBalance(balance int) {
 	self.info.balance = balance
 }

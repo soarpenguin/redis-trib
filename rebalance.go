@@ -178,17 +178,23 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	// Because of rounding, it is possible that the balance of all nodes
 	// summed does not give 0. Make sure that nodes that have to provide
 	// slots are always matched by nodes receiving slots.
-	// TODO: add Calculate code.
 	//total_balance = sn.map{|x| x.info[:balance]}.reduce{|a,b| a+b}
-	//while total_balance > 0
-	//    sn.each{|n|
-	//        if n.info[:balance] < 0 && total_balance > 0
-	//            n.info[:balance] -= 1
-	//            total_balance -= 1
-	//        end
-	//    }
-	//end
+	totalBalance := 0
+	for _, node := range sn {
+		totalBalance += node.Balance()
+	}
 
+	for totalBalance > 0 {
+		for _, node := range sn {
+			if node.Balance() < 0 && totalBalance > 0 {
+				b := node.Balance() - 1
+				node.SetBalance(b)
+				totalBalance -= 1
+			}
+		}
+	}
+
+	// TODO:
 	// Sort nodes by their slots balance.
 	//sn = sn.sort{|a,b|
 	//    a.info[:balance] <=> b.info[:balance]
@@ -196,9 +202,10 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 
 	logrus.Printf(">>> Rebalancing across %d nodes. Total weight = %d", nodesInvolved, totalWeight)
 
-	// TODO:
 	if context.GlobalBool("verbose") {
-
+		for _, node := range sn {
+			logrus.Printf("%s balance is %d slots", node.String(), node.Balance())
+		}
 	}
 
 	// Now we have at the start of the 'sn' array nodes that should get
@@ -206,13 +213,28 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	// We take two indexes, one at the start, and one at the end,
 	// incrementing or decrementing the indexes accordingly til we
 	// find nodes that need to get/provide slots.
-	// TODO:
-	// dstIdx := 0
-	// srcIdx := len(sn) - 1
+	// TODO: check the logic of code
+	dstIdx := 0
+	srcIdx := len(sn) - 1
 
-	//for dstIdx < srcIdx {
+	for dstIdx < srcIdx {
+		dst := sn[dstIdx]
+		src := sn[dstIdx]
 
-	//}
+		var numSlots float64
+		if math.Abs(float64(dst.Balance())) < math.Abs(float64(src.Balance())) {
+			numSlots = math.Abs(float64(dst.Balance()))
+		} else {
+			numSlots = math.Abs(float64(src.Balance()))
+		}
+
+		if numSlots > 0 {
+			logrus.Printf("Moving %d slots from %s to %s", numSlots, src.String(), dst.String())
+
+			// Actaully move the slots.
+			// TODO: add move slot code.
+		}
+	}
 
 	return nil
 }
