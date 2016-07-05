@@ -637,6 +637,51 @@ func (self *RedisTrib) EachPrint(cmd string, args ...interface{}) ([]*InterfaceE
 //  :cold    -- Move keys without opening slots / reconfiguring the nodes.
 //  :update  -- Update nodes.info[:slots] for source/target nodes.
 //  :quiet   -- Don't print info messages.
-func MoveSlot(src, target ClusterNode, slot string, args []interface{}) {
+func (self *RedisTrib) MoveSlot(src, target ClusterNode, slot string, args []interface{}) {
+	// TODO: add move slot code
+	//o = {:pipeline => MigrateDefaultPipeline}.merge(o)
 
+	// We start marking the slot as importing in the destination node,
+	// and the slot as migrating in the target host. Note that the order of
+	// the operations is important, as otherwise a client may be redirected
+	// to the target node that does not yet know it is importing this slot.
+
+	//if !o[:cold]
+	//    target.r.cluster("setslot",slot,"importing",source.info[:name])
+	//    source.r.cluster("setslot",slot,"migrating",target.info[:name])
+	//end
+	// Migrate all the keys from source to target using the MIGRATE command
+	//while true
+	//    keys = source.r.cluster("getkeysinslot",slot,o[:pipeline])
+	//    break if keys.length == 0
+	//    begin
+	//        source.r.client.call(["migrate",target.info[:host],target.info[:port],"",0,@timeout,:keys,*keys])
+	//    rescue => e
+	//        if o[:fix] && e.to_s =~ /BUSYKEY/
+	//            xputs "*** Target key exists. Replacing it for FIX."
+	//            source.r.client.call(["migrate",target.info[:host],target.info[:port],"",0,@timeout,:replace,:keys,*keys])
+	//        else
+	//            puts ""
+	//            xputs "[ERR] Calling MIGRATE: #{e}"
+	//            exit 1
+	//        end
+	//    end
+	//    print "."*keys.length if o[:dots]
+	//    STDOUT.flush
+	//end
+
+	//puts if !o[:quiet]
+	// Set the new node as the owner of the slot in all the known nodes.
+	//if !o[:cold]
+	//    @nodes.each{|n|
+	//        next if n.has_flag?("slave")
+	//        n.r.cluster("setslot",slot,"node",target.info[:name])
+	//    }
+	//end
+
+	// Update the node logical config
+	//if o[:update] then
+	//    source.info[:slots].delete(slot)
+	//    target.info[:slots][slot] = true
+	//end
 }
