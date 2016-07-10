@@ -230,11 +230,11 @@ func (self *RedisTrib) WaitClusterJoin() bool {
 
 // Return the node, among 'nodes' with the greatest number of keys
 // in the specified slot.
-func (self *RedisTrib) GetNodeWithMostKeysInSlot(slot int) (node *ClusterNode) {
+func (self *RedisTrib) GetNodeWithMostKeysInSlot(nodes []*ClusterNode, slot int) (node *ClusterNode) {
 	var best *ClusterNode
 	bestNumkeys := 0
 
-	for _, n := range self.nodes {
+	for _, n := range nodes {
 		if n.HasFlag("slave") {
 			continue
 		}
@@ -294,7 +294,7 @@ func (self *RedisTrib) FixOpenSlot(slot string) {
 	// number of keys, among the set of migrating / importing nodes.
 	if owner == nil {
 		logrus.Printf(">>> Nobody claims ownership, selecting an owner...")
-		owner = self.GetNodeWithMostKeysInSlot(slotnum)
+		owner = self.GetNodeWithMostKeysInSlot(self.nodes, slotnum)
 
 		// If we still don't have an owner, we can't fix it.
 		if owner == nil {
@@ -326,7 +326,7 @@ func (self *RedisTrib) FixOpenSlot(slot string) {
 	// in migrating state, since migrating is a valid state only for
 	// slot owners.
 	if len(owners) > 1 {
-		owner = self.GetNodeWithMostKeysInSlot(slotnum)
+		owner = self.GetNodeWithMostKeysInSlot(owners, slotnum)
 		for _, node := range owners {
 			if node == owner {
 				continue
@@ -435,9 +435,8 @@ func (self *RedisTrib) FixSlotsCoverage() {
 	notCovered := self.NotCoveredSlots()
 
 	logrus.Printf(">>> Fixing slots coverage...")
-	//logrus.Printf("List of not covered slots: %s", strings.Join(notCovered, ","))
+	logrus.Printf("List of not covered slots: %s", NumArray2String(notCovered))
 
-	// TODO: fix_slots_coverage
 	// For every slot, take action depending on the actual condition:
 	// 1) No node has keys for this slot.
 	// 2) A single node has keys for this slot.
@@ -496,14 +495,14 @@ func (self *RedisTrib) FixSlotsCoverage() {
 		logrus.Printf("The folowing uncovered slots have keys in multiple nodes: %s", result)
 		YesOrDie("Fix these slots by moving keys into a single node?")
 		for _, slot := range multi {
-			target := self.GetNodeWithMostKeysInSlot(slot)
+			target := self.GetNodeWithMostKeysInSlot(slots[slot], slot)
 			if target != nil {
 				logrus.Printf(">>> Covering slot %d moving keys to %s", slot, target.String())
 				target.ClusterAddSlots(slot)
 				target.ClusterSetSlotStable(slot)
 				nodes := slots[slot]
-				for _, node := range nodes {
-					if node == target {
+				for _, src := range nodes {
+					if src == target {
 						continue
 					}
 
@@ -511,9 +510,9 @@ func (self *RedisTrib) FixSlotsCoverage() {
 					// Set the source node in 'importing' state (even if we will
 					// actually migrate keys away) in order to avoid receiving
 					// redirections for MIGRATE.
-					//src.r.cluster('setslot',slot,'importing',target.info[:name])
+					src.ClusterSetSlotImporting(slot)
 					//move_slot(src,target,slot,:dots=>true,:fix=>true,:cold=>true)
-					node.ClusterAddSlots(slot)
+					src.ClusterAddSlots(slot)
 				}
 			}
 		}
@@ -627,6 +626,15 @@ func (self *RedisTrib) EachPrint(cmd string, args ...interface{}) ([]*InterfaceE
 				logrus.Println(err)
 			}
 		}, cmd, args...)
+}
+
+// Option struct for move slot
+type MoveOpts struct {
+	Pipeline int
+	Fix      bool
+	Cold     bool
+	Quiet    bool
+	Update   bool
 }
 
 //  Move slots between source and target nodes using MIGRATE.
