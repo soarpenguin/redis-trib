@@ -22,9 +22,6 @@
 # Finds all vendor directories
 DIR_LIST=`find . -type d -name Godeps`
 
-# Remove directories used for versioning
-find $DIR_LIST -type d -name ".bzr" -o -name ".git" -exec rm -rf {} \;
-
 ## Removing all yaml files which are normally config files (travis.yml)
 find $DIR_LIST -type f -name "*.yml" -exec rm -r {} \;
 
@@ -44,3 +41,5 @@ find $DIR_LIST -type f -name "*.cfg" -exec rm -r {} \;
 ## Removing all *.bat files
 find $DIR_LIST -type f -name "*.bat" -exec rm -r {} \;
 
+# Remove directories used for versioning
+find $DIR_LIST -type d -name ".bzr" -o -name ".git" -exec rm -rf {} \;
