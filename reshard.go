@@ -241,10 +241,24 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 	return nil
 }
 
+type ClusterArray []ClusterNode
+
+func (c ClusterArray) Len() int {
+	return len(c)
+}
+
+func (c ClusterArray) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
+func (c ClusterArray) Less(i, j int) bool {
+	return len(c[i].Slots()) < len(c[j].Slots())
+}
+
 // Given a list of source nodes return a "resharding plan"
 // with what slots to move in order to move "numslots" slots to another
 // instance.
-func ComputeReshardTable(sources []interface{}, numSlots int) []ClusterNode {
+func ComputeReshardTable(sources ClusterArray, numSlots int) []ClusterNode {
 	// Sort from bigger to smaller instance, for two reasons:
 	// 1) If we take less slots than instances it is better to start
 	//    getting from the biggest instances.
@@ -252,6 +266,7 @@ func ComputeReshardTable(sources []interface{}, numSlots int) []ClusterNode {
 	//    perfect divisibility. Like we have 3 nodes and need to get 10
 	//    slots, we take 4 from the first, and 3 from the rest. So the
 	//    biggest is always the first.
+	// sort.Sort(sources)
 	return nil
 }
 
