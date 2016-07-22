@@ -1,6 +1,7 @@
 default: help
 
 COMMIT := $(shell git rev-parse HEAD 2> /dev/null || true)
+VERSION	= $(shell git describe --tags)
 GITHUB_SRC := github.com/soarpenguin
 MODULE := redis-trib
 REDIS_LINK := $(CURDIR)/Godeps/_workspace/src/$(GITHUB_SRC)
@@ -9,7 +10,7 @@ export GOPATH := $(CURDIR)/Godeps/_workspace
 
 ## Make bin for redis-trib.
 bin: $(REDIS_LINK)
-	go build -i -ldflags "-X main.gitCommit=${COMMIT}" -o redis-trib .
+	go build -i -ldflags "-X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o redis-trib .
 
 godep:
 	go get github.com/tools/godep

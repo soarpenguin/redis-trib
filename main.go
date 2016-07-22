@@ -9,13 +9,16 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+// version will be the hash that the binary was built from
+// and will be populated by the Makefile
+var version = ""
+
 // gitCommit will be the hash that the binary was built from
 // and will be populated by the Makefile
 var gitCommit = ""
 
 const (
-	version = "0.0.1"
-	usage   = `Redis Cluster command line utility.
+	usage = `Redis Cluster command line utility.
 
 For check, fix, reshard, del-node, set-timeout you can specify the host and port
 of any working node in the cluster.`
