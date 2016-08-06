@@ -1,7 +1,7 @@
 default: help
 
 COMMIT := $(shell git rev-parse HEAD 2> /dev/null || true)
-VERSION	= $(shell git describe --tags)
+VERSION	= $(shell git describe --tags --abbrev=0 2> /dev/null)
 GITHUB_SRC := github.com/soarpenguin
 MODULE := redis-trib
 REDIS_LINK := $(CURDIR)/Godeps/_workspace/src/$(GITHUB_SRC)
