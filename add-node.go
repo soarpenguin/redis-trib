@@ -71,7 +71,11 @@ func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 			}
 		} else {
 			master = self.GetMasterWithLeastReplicas()
-			logrus.Printf("Automatically selected master %s", master.String())
+			if master == nil {
+				logrus.Errorf("Can't selected a master node!")
+			} else {
+				logrus.Printf("Automatically selected master %s", master.String())
+			}
 		}
 	}
 
@@ -99,8 +103,10 @@ func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 	// a slave.
 	if context.Bool("slave") {
 		self.WaitClusterJoin()
-		logrus.Printf(">>> Configure node as replica of %s.", master.String())
-		new.ClusterReplicateWithNodeID(master.Name())
+		if master != nil {
+			logrus.Printf(">>> Configure node as replica of %s.", master.String())
+			new.ClusterReplicateWithNodeID(master.Name())
+		}
 	}
 	logrus.Printf("[OK] New node added correctly.")
 	return nil
