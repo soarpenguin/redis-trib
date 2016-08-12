@@ -64,9 +64,11 @@ func (self *RedisTrib) DelNodeClusterCmd(context *cli.Context) error {
 
 		if n.Replicate() != "" && strings.ToLower(n.Replicate()) == nodeid {
 			master := self.GetMasterWithLeastReplicas()
-			logrus.Printf(">>> %s as replica of %s", n.String(), master.String())
-			if _, err := n.ClusterReplicateWithNodeID(master.Name()); err != nil {
-				logrus.Errorf("%s", err.Error())
+			if master != nil {
+				logrus.Printf(">>> %s as replica of %s", n.String(), master.String())
+				if _, err := n.ClusterReplicateWithNodeID(master.Name()); err != nil {
+					logrus.Errorf("%s", err.Error())
+				}
 			}
 		}
 

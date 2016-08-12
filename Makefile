@@ -38,6 +38,7 @@ clean:
 #	find . -name '*.created' -exec rm -f {} +
 	-rm -rf var
 	-rm -f redis-trib
+	-rm -rf ${REDIS_LINK}/
 
 help: # Some kind of magic from https://gist.github.com/rcmachado/af3db315e31383502660
 	$(info Available targets)
