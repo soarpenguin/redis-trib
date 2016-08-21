@@ -24,6 +24,41 @@ For check, fix, reshard, del-node, set-timeout you can specify the host and port
 of any working node in the cluster.`
 )
 
+var mainFlags = []cli.Flag{
+	cli.BoolFlag{
+		Name:  "debug",
+		Usage: "enable debug output for logging",
+	},
+	cli.BoolFlag{
+		Name:  "verbose",
+		Usage: "verbose global flag for output.",
+	},
+	//cli.StringFlag{
+	//	Name:  "log",
+	//	Value: "/dev/null",
+	//	Usage: "set the log file path where internal debug information is written",
+	//},
+	cli.StringFlag{
+		Name:  "log-format",
+		Value: "text",
+		Usage: "set the format used by logs ('text' (default), or 'json')",
+	},
+}
+
+var mainCommands = []cli.Command{
+	addNodeCommand,
+	callCommand,
+	checkCommand,
+	createCommand,
+	delNodeCommand,
+	fixCommand,
+	importCommand,
+	infoCommand,
+	rebalanceCommand,
+	reshardCommand,
+	setTimeoutCommand,
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "redis-trib"
@@ -35,42 +70,11 @@ func main() {
 		v = append(v, fmt.Sprintf("commit: %s", gitCommit))
 	}
 	app.Version = strings.Join(v, "\n")
-	app.Flags = []cli.Flag{
-		cli.BoolFlag{
-			Name:  "debug",
-			Usage: "enable debug output for logging",
-		},
-		cli.BoolFlag{
-			Name:  "verbose",
-			Usage: "verbose global flag for output.",
-		},
-		//cli.StringFlag{
-		//	Name:  "log",
-		//	Value: "/dev/null",
-		//	Usage: "set the log file path where internal debug information is written",
-		//},
-		cli.StringFlag{
-			Name:  "log-format",
-			Value: "text",
-			Usage: "set the format used by logs ('text' (default), or 'json')",
-		},
-	}
+	app.Flags = mainFlags
 	app.Author = "soarpenguin"
 	app.Email = "soarpenguin@gmail.com"
 	app.EnableBashCompletion = true
-	app.Commands = []cli.Command{
-		addNodeCommand,
-		callCommand,
-		checkCommand,
-		createCommand,
-		delNodeCommand,
-		fixCommand,
-		importCommand,
-		infoCommand,
-		rebalanceCommand,
-		reshardCommand,
-		setTimeoutCommand,
-	}
+	app.Commands = mainCommands
 	app.Before = func(context *cli.Context) error {
 		if context.GlobalBool("debug") {
 			logrus.SetLevel(logrus.DebugLevel)
