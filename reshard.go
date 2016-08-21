@@ -167,7 +167,7 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 				sources = append(sources, "all")
 				break
 			} else if src == nil || src.HasFlag("slave") {
-				logrus.Fatalf("*** The specified node is not known or not a master, please retry.")
+				logrus.Warningf("*** The specified node is not known or not a master, please retry.")
 			} else if src.Name() == target.Name() {
 				logrus.Warningf("*** It is not possible to use the target node as source node.")
 			} else {
@@ -215,7 +215,7 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 			fmt.Printf("\t%s", cnode.InfoString())
 		}
 	}
-	logrus.Printf("  Destination nodes: %s", target.InfoString())
+	logrus.Printf("  Destination node: %s", target.InfoString())
 
 	// TODO: ComputeReshardTable
 	//reshardTable := ComputeReshardTable(sources, numSlots)
@@ -266,7 +266,14 @@ func ComputeReshardTable(sources ClusterArray, numSlots int) []ClusterNode {
 	//    perfect divisibility. Like we have 3 nodes and need to get 10
 	//    slots, we take 4 from the first, and 3 from the rest. So the
 	//    biggest is always the first.
-	// sort.Sort(sources)
+	sourceTotSlots := 0
+	for _, node := range sources {
+		sourceTotSlots += len(node.Slots())
+	}
+
+	//for idx, node := range sources {
+	//
+	//}
 	return nil
 }
 
