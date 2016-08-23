@@ -463,3 +463,24 @@ func (self *ClusterNode) GetConfigSignature() string {
 	sort.Strings(config)
 	return strings.Join(config, "|")
 }
+
+///////////////////////////////////////////////////////////
+// some useful struct contains cluster node.
+type ClusterArray []ClusterNode
+
+func (c ClusterArray) Len() int {
+	return len(c)
+}
+
+func (c ClusterArray) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
+func (c ClusterArray) Less(i, j int) bool {
+	return len(c[i].Slots()) < len(c[j].Slots())
+}
+
+type MovedNode struct {
+	Source ClusterNode
+	Slot   int
+}

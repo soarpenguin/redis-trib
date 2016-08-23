@@ -25,7 +25,6 @@ var fixCommand = cli.Command{
 
 		rt := NewRedisTrib()
 		if err := rt.FixClusterCmd(context); err != nil {
-			//logrus.Errorf("%p", err)
 			return err
 		}
 		return nil

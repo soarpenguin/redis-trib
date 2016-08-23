@@ -244,29 +244,11 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 	return nil
 }
 
-type ClusterArray []ClusterNode
-
-func (c ClusterArray) Len() int {
-	return len(c)
-}
-
-func (c ClusterArray) Swap(i, j int) {
-	c[i], c[j] = c[j], c[i]
-}
-
-func (c ClusterArray) Less(i, j int) bool {
-	return len(c[i].Slots()) < len(c[j].Slots())
-}
-
-type MovedNode struct {
-	Source ClusterNode
-	Slot   int
-}
-
 // Given a list of source nodes return a "resharding plan"
 // with what slots to move in order to move "numslots" slots to another
 // instance.
 func ComputeReshardTable(sources ClusterArray, numSlots int) []*MovedNode {
+	// defined in clusternode.go
 	var moved []*MovedNode
 	// Sort from bigger to smaller instance, for two reasons:
 	// 1) If we take less slots than instances it is better to start
