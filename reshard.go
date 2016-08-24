@@ -83,6 +83,10 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 		logrus.Fatalf("*** Please fix your cluster problem before resharding.")
 	}
 
+	if context.Int("timeout") > 0 {
+		self.SetTimeout(context.Int("timeout"))
+	}
+
 	// Get number of slots
 	var numSlots int
 	if context.Int("slots") != 0 {
@@ -100,7 +104,6 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 				break
 			}
 		}
-
 	}
 
 	// Get the target instance
@@ -185,6 +188,7 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 	if len(sources) == 1 {
 		first := sources[0]
 
+		// Handle soures == all.
 		str, found := first.(string)
 		if found && str == "all" {
 			sources = sources[:0]
@@ -196,7 +200,6 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 				sources = append(sources, node)
 			}
 		}
-		//logrus.Printf("%v", sources)
 	}
 
 	// Check if the destination node is the same of any source nodes.
@@ -236,10 +239,22 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 		}
 	}
 
+	pipeline := MigrateDefaultPipeline
+	if context.String("pipeline") != "" {
+		pnum, err := strconv.Atoi(context.String("pipeline"))
+		if err == nil {
+			pipeline = pnum
+		}
+	}
+	opts := &MoveOpts{
+		Dots:     true,
+		Pipeline: pipeline,
+	}
 	// TODO: Move slots
-	//for _, _ := range reshardTable {
-	//	// move slot
-	//}
+	for _, e := range reshardTable {
+		// move slot
+		self.MoveSlot(e, target, opts)
+	}
 
 	return nil
 }

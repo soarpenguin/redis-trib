@@ -630,6 +630,7 @@ func (self *RedisTrib) EachPrint(cmd string, args ...interface{}) ([]*InterfaceE
 
 // Option struct for move slot
 type MoveOpts struct {
+	Dots     bool
 	Pipeline int
 	Verbose  bool
 	Fix      bool
@@ -646,7 +647,7 @@ type MoveOpts struct {
 //  :cold    -- Move keys without opening slots / reconfiguring the nodes.
 //  :update  -- Update nodes.info[:slots] for source/target nodes.
 //  :quiet   -- Don't print info messages.
-func (self *RedisTrib) MoveSlot(source *MovedNode, target ClusterNode, slot int, o *MoveOpts) {
+func (self *RedisTrib) MoveSlot(source *MovedNode, target *ClusterNode, o *MoveOpts) {
 	// TODO: add move slot code
 	//o = {:pipeline => MigrateDefaultPipeline}.merge(o)
 
