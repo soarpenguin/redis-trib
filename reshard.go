@@ -98,7 +98,10 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 			if numSlots <= 0 || numSlots > ClusterHashSlots {
 				fmt.Printf("How many slots do you want to move (from 1 to %d)? ", ClusterHashSlots)
 				text, _ := reader.ReadString('\n')
-				num, _ := strconv.ParseInt(strings.TrimSpace(text), 10, 0)
+				num, err := strconv.ParseInt(strings.TrimSpace(text), 10, 0)
+				if err != nil {
+					continue
+				}
 				numSlots = int(num)
 			} else {
 				break

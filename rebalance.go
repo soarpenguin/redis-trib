@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -168,7 +169,7 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	}
 
 	// Only consider nodes we want to change
-	var sn [](*ClusterNode)
+	var sn BalanceArray
 	for _, node := range self.nodes {
 		if node.HasFlag("master") && node.Weight() != 0 {
 			sn = append(sn, node)
@@ -199,6 +200,7 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	//sn = sn.sort{|a,b|
 	//    a.info[:balance] <=> b.info[:balance]
 	//}
+	sort.Sort(BalanceArray(sn))
 
 	logrus.Printf(">>> Rebalancing across %d nodes. Total weight = %d", nodesInvolved, totalWeight)
 
@@ -237,4 +239,20 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	}
 
 	return nil
+}
+
+///////////////////////////////////////////////////////////
+// some useful struct contains cluster node.
+type BalanceArray []*ClusterNode
+
+func (b BalanceArray) Len() int {
+	return len(b)
+}
+
+func (b BalanceArray) Swap(i, j int) {
+	b[i], b[j] = b[j], b[i]
+}
+
+func (b BalanceArray) Less(i, j int) bool {
+	return b[i].Balance() < b[j].Balance()
 }
