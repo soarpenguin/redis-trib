@@ -85,21 +85,19 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	//threshold := context.Int("threshold")
 	//autoweights := context.Bool("auto-weights")
 	weights := make(map[string]int)
-	if context.String("weight") != "" {
-		ws := context.StringSlice("weight")
-		for _, e := range ws {
-			if e != "" && strings.Contains(e, "=") {
-				s := strings.Split(e, "=")
-				node := self.GetNodeByAbbreviatedName(s[0])
-				if node == nil || !node.HasFlag("master") {
-					logrus.Fatalf("*** No such master node %s", s[0])
-				}
+	ws := context.StringSlice("weight")
+	for _, e := range ws {
+		if e != "" && strings.Contains(e, "=") {
+			s := strings.Split(e, "=")
+			node := self.GetNodeByAbbreviatedName(s[0])
+			if node == nil || !node.HasFlag("master") {
+				logrus.Fatalf("*** No such master node %s", s[0])
+			}
 
-				if w, err := strconv.Atoi(s[1]); err != nil {
-					logrus.Fatalf("Invalid weight num for rebalance: %s=%v", s[0], s[1])
-				} else {
-					weights[node.Name()] = w
-				}
+			if w, err := strconv.Atoi(s[1]); err != nil {
+				logrus.Fatalf("Invalid weight num for rebalance: %s=%v", s[0], s[1])
+			} else {
+				weights[node.Name()] = w
 			}
 		}
 	}
