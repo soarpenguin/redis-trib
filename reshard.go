@@ -4,9 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"math"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -228,9 +226,9 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 	logrus.Printf("  Destination node: %s", target.InfoString())
 
 	// TODO: ComputeReshardTable
-	reshardTable := ComputeReshardTable(srcs, numSlots)
+	reshardTable := self.ComputeReshardTable(srcs, numSlots)
 	logrus.Printf("  Resharding plan:")
-	ShowReshardTable(reshardTable)
+	self.ShowReshardTable(reshardTable)
 
 	if !context.Bool("yes") {
 		fmt.Printf("Do you want to proceed with the proposed reshard plan (yes/no)? ")
@@ -260,60 +258,4 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 	}
 
 	return nil
-}
-
-// Given a list of source nodes return a "resharding plan"
-// with what slots to move in order to move "numslots" slots to another
-// instance.
-func ComputeReshardTable(sources ClusterArray, numSlots int) []*MovedNode {
-	// defined in clusternode.go
-	var moved []*MovedNode
-	// Sort from bigger to smaller instance, for two reasons:
-	// 1) If we take less slots than instances it is better to start
-	//    getting from the biggest instances.
-	// 2) We take one slot more from the first instance in the case of not
-	//    perfect divisibility. Like we have 3 nodes and need to get 10
-	//    slots, we take 4 from the first, and 3 from the rest. So the
-	//    biggest is always the first.
-	sort.Sort(ClusterArray(sources))
-
-	sourceTotSlots := 0
-	for _, node := range sources {
-		sourceTotSlots += len(node.Slots())
-	}
-
-	for idx, node := range sources {
-		n := float64(numSlots) / float64(sourceTotSlots*len(node.Slots()))
-
-		if idx == 0 {
-			n = math.Ceil(n)
-		} else {
-			n = math.Floor(n)
-		}
-
-		keys := make([]int, len(node.Slots()))
-		i := 0
-		for k, _ := range node.Slots() {
-			keys[i] = k
-			i++
-		}
-		sort.Ints(keys)
-
-		for i := 0; i < int(n); i++ {
-			if len(moved) < numSlots {
-				mnode := &MovedNode{
-					Source: node,
-					Slot:   keys[i],
-				}
-				moved = append(moved, mnode)
-			}
-		}
-	}
-	return moved
-}
-
-func ShowReshardTable(table []*MovedNode) {
-	for _, node := range table {
-		logrus.Printf("    Moving slot %d from %s", node.Slot, node.Source.Name())
-	}
 }

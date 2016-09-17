@@ -219,7 +219,7 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 
 	for dstIdx < srcIdx {
 		dst := sn[dstIdx]
-		src := sn[dstIdx]
+		src := sn[srcIdx]
 
 		var numSlots float64
 		if math.Abs(float64(dst.Balance())) < math.Abs(float64(src.Balance())) {
@@ -233,6 +233,36 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 
 			// Actaully move the slots.
 			// TODO: add move slot code.
+			srcs := ClusterArray{*src}
+			reshardTable := self.ComputeReshardTable(srcs, int(numSlots))
+			if len(reshardTable) != int(numSlots) {
+				logrus.Fatalf("*** Assertio failed: Reshard table != number of slots")
+			}
+
+			if context.Bool("simulate") {
+				// print "#"*reshard_table.length
+			} else {
+				// reshard_table.each{|e|
+				//     move_slot(e[:source],dst,e[:slot],
+				//         :quiet=>true,
+				//         :dots=>false,
+				//         :update=>true,
+				//         :pipeline=>opt['pipeline'])
+				//     print "#"
+				//     STDOUT.flush
+				// }
+
+			}
+		}
+
+		// Update nodes balance.
+		dst.SetBalance(dst.Balance() + int(numSlots))
+		src.SetBalance(src.Balance() - int(numSlots))
+		if dst.Balance() == 0 {
+			dstIdx += 1
+		}
+		if src.Balance() == 0 {
+			srcIdx -= 1
 		}
 	}
 

@@ -3,7 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -694,4 +696,60 @@ func (self *RedisTrib) MoveSlot(source *MovedNode, target *ClusterNode, o *MoveO
 	//    source.info[:slots].delete(slot)
 	//    target.info[:slots][slot] = true
 	//end
+}
+
+// Given a list of source nodes return a "resharding plan"
+// with what slots to move in order to move "numslots" slots to another
+// instance.
+func (self *RedisTrib) ComputeReshardTable(sources ClusterArray, numSlots int) []*MovedNode {
+	// defined in clusternode.go
+	var moved []*MovedNode
+	// Sort from bigger to smaller instance, for two reasons:
+	// 1) If we take less slots than instances it is better to start
+	//    getting from the biggest instances.
+	// 2) We take one slot more from the first instance in the case of not
+	//    perfect divisibility. Like we have 3 nodes and need to get 10
+	//    slots, we take 4 from the first, and 3 from the rest. So the
+	//    biggest is always the first.
+	sort.Sort(ClusterArray(sources))
+
+	sourceTotSlots := 0
+	for _, node := range sources {
+		sourceTotSlots += len(node.Slots())
+	}
+
+	for idx, node := range sources {
+		n := float64(numSlots) / float64(sourceTotSlots*len(node.Slots()))
+
+		if idx == 0 {
+			n = math.Ceil(n)
+		} else {
+			n = math.Floor(n)
+		}
+
+		keys := make([]int, len(node.Slots()))
+		i := 0
+		for k, _ := range node.Slots() {
+			keys[i] = k
+			i++
+		}
+		sort.Ints(keys)
+
+		for i := 0; i < int(n); i++ {
+			if len(moved) < numSlots {
+				mnode := &MovedNode{
+					Source: node,
+					Slot:   keys[i],
+				}
+				moved = append(moved, mnode)
+			}
+		}
+	}
+	return moved
+}
+
+func (self *RedisTrib) ShowReshardTable(table []*MovedNode) {
+	for _, node := range table {
+		logrus.Printf("    Moving slot %d from %s", node.Slot, node.Source.Name())
+	}
 }
