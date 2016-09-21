@@ -195,9 +195,6 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 
 	// TODO:
 	// Sort nodes by their slots balance.
-	//sn = sn.sort{|a,b|
-	//    a.info[:balance] <=> b.info[:balance]
-	//}
 	sort.Sort(BalanceArray(sn))
 
 	logrus.Printf(">>> Rebalancing across %d nodes. Total weight = %d", nodesInvolved, totalWeight)
@@ -240,18 +237,23 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 			}
 
 			if context.Bool("simulate") {
-				// print "#"*reshard_table.length
+				logrus.Printf("%s", strings.Repeat("#", len(reshardTable)))
 			} else {
-				// reshard_table.each{|e|
-				//     move_slot(e[:source],dst,e[:slot],
-				//         :quiet=>true,
-				//         :dots=>false,
-				//         :update=>true,
-				//         :pipeline=>opt['pipeline'])
-				//     print "#"
-				//     STDOUT.flush
-				// }
+				//opts := &MoveOpts{
+				//	Dots:     true,
+				//	Pipeline: pipeline,
+				//}
+				for _, _ = range reshardTable {
+					//self.MoveSlot(e, target, opts)
 
+					//     move_slot(e[:source],dst,e[:slot],
+					//         :quiet=>true,
+					//         :dots=>false,
+					//         :update=>true,
+					//         :pipeline=>opt['pipeline'])
+					//     print "#"
+					//     STDOUT.flush
+				}
 			}
 		}
 
