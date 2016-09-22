@@ -39,12 +39,13 @@ func (self *RedisTrib) SetTimeoutClusterCmd(context *cli.Context) error {
 		logrus.Fatalf("Setting a node timeout of less than 100 milliseconds is a bad idea.")
 	}
 
+	// Load cluster information
 	if err := self.LoadClusterInfoFromNode(addr); err != nil {
 		return err
 	}
-
 	okCount := 0
 	errCount := 0
+
 	// Send CLUSTER FORGET to all the nodes but the node to remove
 	logrus.Printf(">>> Reconfiguring node timeout in every cluster node...")
 
@@ -63,7 +64,6 @@ func (self *RedisTrib) SetTimeoutClusterCmd(context *cli.Context) error {
 		}
 	}
 
-	logrus.Printf(">>> New node timeout set. %d OK, %d ERR.",
-		okCount, errCount)
+	logrus.Printf(">>> New node timeout set. %d OK, %d ERR.", okCount, errCount)
 	return nil
 }
