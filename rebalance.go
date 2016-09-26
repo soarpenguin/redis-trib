@@ -240,8 +240,10 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 				logrus.Printf("%s", strings.Repeat("#", len(reshardTable)))
 			} else {
 				//opts := &MoveOpts{
-				//	Dots:     true,
-				//	Pipeline: pipeline,
+				//	Quiet:    true,
+				//	Dots:     false,
+				//	Update:   true,
+				//	Pipeline: context.Int("pipeline"),
 				//}
 				for _, _ = range reshardTable {
 					//self.MoveSlot(e, target, opts)
