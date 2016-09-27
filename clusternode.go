@@ -242,8 +242,8 @@ func (self *ClusterNode) ClusterCountKeysInSlot(slot int) (int, error) {
 	return redis.Int(self.Call("CLUSTER", "countkeysinslot", slot))
 }
 
-func (self *ClusterNode) ClusterGetKeysInSlot(slot int) (string, error) {
-	return redis.String(self.Call("CLUSTER", "getkeysinslot", slot, 1))
+func (self *ClusterNode) ClusterGetKeysInSlot(slot int, pipeline int) (string, error) {
+	return redis.String(self.Call("CLUSTER", "getkeysinslot", slot, pipeline))
 }
 
 func (self *ClusterNode) ClusterSetSlotStable(slot int) (string, error) {

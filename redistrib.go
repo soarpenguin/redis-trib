@@ -425,7 +425,7 @@ func (self *RedisTrib) NodesWithKeysInSlot(slot int) (nodes [](*ClusterNode)) {
 			continue
 		}
 
-		ret, err := node.ClusterGetKeysInSlot(slot)
+		ret, err := node.ClusterGetKeysInSlot(slot, 1)
 		if err == nil && len(ret) > 0 {
 			nodes = append(nodes, node)
 		}
@@ -651,51 +651,70 @@ type MoveOpts struct {
 //  :quiet   -- Don't print info messages.
 func (self *RedisTrib) MoveSlot(source *MovedNode, target *ClusterNode, o *MoveOpts) {
 	// TODO: add move slot code
-	//o = {:pipeline => MigrateDefaultPipeline}.merge(o)
+	if o.Pipeline <= 0 {
+		o.Pipeline = MigrateDefaultPipeline
+	}
 
 	// We start marking the slot as importing in the destination node,
 	// and the slot as migrating in the target host. Note that the order of
 	// the operations is important, as otherwise a client may be redirected
 	// to the target node that does not yet know it is importing this slot.
 
-	//if !o[:cold]
-	//    target.r.cluster("setslot",slot,"importing",source.info[:name])
-	//    source.r.cluster("setslot",slot,"migrating",target.info[:name])
-	//end
+	if !o.Cold {
+		//target.r.cluster("setslot",slot,"importing",source.info[:name])
+		//source.r.cluster("setslot",slot,"migrating",target.info[:name])
+	}
+
 	// Migrate all the keys from source to target using the MIGRATE command
-	//while true
-	//    keys = source.r.cluster("getkeysinslot",slot,o[:pipeline])
-	//    break if keys.length == 0
-	//    begin
-	//        source.r.client.call(["migrate",target.info[:host],target.info[:port],"",0,@timeout,:keys,*keys])
-	//    rescue => e
-	//        if o[:fix] && e.to_s =~ /BUSYKEY/
-	//            xputs "*** Target key exists. Replacing it for FIX."
-	//            source.r.client.call(["migrate",target.info[:host],target.info[:port],"",0,@timeout,:replace,:keys,*keys])
-	//        else
-	//            puts ""
-	//            xputs "[ERR] Calling MIGRATE: #{e}"
-	//            exit 1
-	//        end
-	//    end
-	//    print "."*keys.length if o[:dots]
-	//    STDOUT.flush
-	//end
+	for {
+		keys, err := source.Source.ClusterGetKeysInSlot(source.Slot, o.Pipeline)
+		if err != nil {
+			if len(keys) == 0 {
+				break
+			}
+		}
+		if o.Dots {
+			logrus.Printf("%s", strings.Repeat(".", len(keys)))
+		}
+
+		//keys = source.r.cluster("getkeysinslot",slot,o[:pipeline])
+		//break if keys.length == 0
+		//begin
+		//    source.r.client.call(["migrate",target.info[:host],target.info[:port],"",0,@timeout,:keys,*keys])
+		//rescue => e
+		//    if o[:fix] && e.to_s =~ /BUSYKEY/
+		//        xputs "*** Target key exists. Replacing it for FIX."
+		//        source.r.client.call(["migrate",target.info[:host],target.info[:port],"",0,@timeout,:replace,:keys,*keys])
+		//    else
+		//        puts ""
+		//        xputs "[ERR] Calling MIGRATE: #{e}"
+		//        exit 1
+		//    end
+		//end
+		//print "."*keys.length if o[:dots]
+		//STDOUT.flush
+	}
 
 	//puts if !o[:quiet]
+	if !o.Quiet {
+		logrus.Printf("\n")
+	}
+
 	// Set the new node as the owner of the slot in all the known nodes.
-	//if !o[:cold]
-	//    @nodes.each{|n|
-	//        next if n.has_flag?("slave")
-	//        n.r.cluster("setslot",slot,"node",target.info[:name])
-	//    }
-	//end
+	if !o.Cold {
+		for _, n := range self.nodes {
+			if n.HasFlag("slave") {
+				continue
+			}
+			//  n.r.cluster("setslot",slot,"node",target.info[:name])
+		}
+	}
 
 	// Update the node logical config
-	//if o[:update] then
-	//    source.info[:slots].delete(slot)
-	//    target.info[:slots][slot] = true
-	//end
+	if o.Update {
+		//source.info[:slots].delete(slot)
+		//target.info[:slots][slot] = true
+	}
 }
 
 // Given a list of source nodes return a "resharding plan"
