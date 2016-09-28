@@ -306,7 +306,7 @@ func (self *RedisTrib) FixOpenSlot(slot string) {
 		// TODO: add fix open slot code here
 		// Use ADDSLOTS to assign the slot.
 		logrus.Printf("*** Configuring %s as the slot owner", owner.String())
-		owner.ClusterSetSlotStable(slotnum)
+		owner.ClusterSetSlot(slotnum, "stable")
 		owner.ClusterAddSlots(slotnum)
 		// Make sure this information will propagate. Not strictly needed
 		// since there is no past owner, so all the other nodes will accept
@@ -501,7 +501,7 @@ func (self *RedisTrib) FixSlotsCoverage() {
 			if target != nil {
 				logrus.Printf(">>> Covering slot %d moving keys to %s", slot, target.String())
 				target.ClusterAddSlots(slot)
-				target.ClusterSetSlotStable(slot)
+				target.ClusterSetSlot(slot, "stable")
 				nodes := slots[slot]
 				for _, src := range nodes {
 					if src == target {
@@ -512,7 +512,7 @@ func (self *RedisTrib) FixSlotsCoverage() {
 					// Set the source node in 'importing' state (even if we will
 					// actually migrate keys away) in order to avoid receiving
 					// redirections for MIGRATE.
-					src.ClusterSetSlotImporting(slot)
+					src.ClusterSetSlot(slot, "importing")
 					//move_slot(src,target,slot,:dots=>true,:fix=>true,:cold=>true)
 					src.ClusterAddSlots(slot)
 				}
@@ -659,10 +659,13 @@ func (self *RedisTrib) MoveSlot(source *MovedNode, target *ClusterNode, o *MoveO
 	// and the slot as migrating in the target host. Note that the order of
 	// the operations is important, as otherwise a client may be redirected
 	// to the target node that does not yet know it is importing this slot.
+	if !o.Quiet {
+		logrus.Printf("Moving slot %d from %s to %s: ", source.Slot, source.Source.InfoString(), target.InfoString())
+	}
 
 	if !o.Cold {
-		//target.r.cluster("setslot",slot,"importing",source.info[:name])
-		//source.r.cluster("setslot",slot,"migrating",target.info[:name])
+		target.ClusterSetSlot(source.Slot, "importing")
+		source.Source.ClusterSetSlot(source.Slot, "migrating")
 	}
 
 	// Migrate all the keys from source to target using the MIGRATE command

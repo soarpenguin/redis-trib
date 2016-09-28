@@ -246,12 +246,8 @@ func (self *ClusterNode) ClusterGetKeysInSlot(slot int, pipeline int) (string, e
 	return redis.String(self.Call("CLUSTER", "getkeysinslot", slot, pipeline))
 }
 
-func (self *ClusterNode) ClusterSetSlotStable(slot int) (string, error) {
-	return redis.String(self.Call("CLUSTER", "setslot", slot, "stable"))
-}
-
-func (self *ClusterNode) ClusterSetSlotImporting(slot int) (string, error) {
-	return redis.String(self.Call("CLUSTER", "setslot", slot, "importing", self.Name()))
+func (self *ClusterNode) ClusterSetSlot(slot int, cmd string) (string, error) {
+	return redis.String(self.Call("CLUSTER", "setslot", slot, cmd, self.Name()))
 }
 
 func (self *ClusterNode) AssertCluster() bool {
