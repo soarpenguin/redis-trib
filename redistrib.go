@@ -670,10 +670,25 @@ func (self *RedisTrib) MoveSlot(source *MovedNode, target *ClusterNode, o *MoveO
 
 	// Migrate all the keys from source to target using the MIGRATE command
 	for {
-		keys, err := source.Source.ClusterGetKeysInSlot(source.Slot, o.Pipeline)
-		if err != nil {
+		keystr, err := source.Source.ClusterGetKeysInSlot(source.Slot, o.Pipeline)
+		keys := strings.Split(keystr, "\n")
+		if err == nil {
 			if len(keys) == 0 {
 				break
+			}
+
+			// XXX: migrate parameters check
+			_, err := source.Source.Call("migrate", target.Host(), target.Port(), "", 0, self.Timeout(), keys, keys)
+			if err != nil {
+				errinfo := err.Error()
+				if o.Fix && strings.Contains(errinfo, "BUSYKEY") {
+					logrus.Printf("*** Target key exists. Replacing it for FIX.")
+					// XXX: migrate parameters check
+					_, _ = source.Source.Call("migrate", target.Host(), target.Port(), "", 0, self.Timeout(), keys, keys)
+				} else {
+					logrus.Printf("\n")
+					logrus.Fatalf("[ERR] Calling MIGRATE: %s", errinfo)
+				}
 			}
 		}
 		if o.Dots {
