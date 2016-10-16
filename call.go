@@ -15,7 +15,6 @@ var callCommand = cli.Command{
 	Action: func(context *cli.Context) error {
 		rt := NewRedisTrib()
 		if err := rt.CallClusterCmd(context); err != nil {
-			//logrus.Errorf("%p", err)
 			return err
 		}
 		return nil

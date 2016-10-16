@@ -28,7 +28,6 @@ var createCommand = cli.Command{
 
 		rt := NewRedisTrib()
 		if err := rt.CreateClusterCmd(context); err != nil {
-			//logrus.Errorf("%p", err)
 			return err
 		}
 		return nil

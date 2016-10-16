@@ -58,7 +58,6 @@ var reshardCommand = cli.Command{
 
 		rt := NewRedisTrib()
 		if err := rt.ReshardClusterCmd(context); err != nil {
-			//logrus.Errorf("%p", err)
 			return err
 		}
 		return nil
