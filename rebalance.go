@@ -239,24 +239,18 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 			if context.Bool("simulate") {
 				logrus.Printf("%s", strings.Repeat("#", len(reshardTable)))
 			} else {
-				//opts := &MoveOpts{
-				//	Quiet:    true,
-				//	Dots:     false,
-				//	Update:   true,
-				//	Pipeline: context.Int("pipeline"),
-				//}
-				for _, _ = range reshardTable {
-					//self.MoveSlot(e, target, opts)
-
-					//     move_slot(e[:source],dst,e[:slot],
-					//         :quiet=>true,
-					//         :dots=>false,
-					//         :update=>true,
-					//         :pipeline=>opt['pipeline'])
-					//     print "#"
-					//     STDOUT.flush
+				opts := &MoveOpts{
+					Quiet:    true,
+					Dots:     false,
+					Update:   true,
+					Pipeline: context.Int("pipeline"),
+				}
+				for _, e := range reshardTable {
+					self.MoveSlot(e, dst, opts)
+					logrus.Printf("#")
 				}
 			}
+			logrus.Printf("\n")
 		}
 
 		// Update nodes balance.
