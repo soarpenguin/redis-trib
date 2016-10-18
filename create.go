@@ -8,6 +8,7 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+// create           host1:port1 ... hostN:portN
 var createCommand = cli.Command{
 	Name:      "create",
 	Usage:     "create a new redis cluster.",

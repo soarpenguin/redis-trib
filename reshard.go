@@ -19,7 +19,6 @@ import (
 //                  --yes
 //                  --timeout <arg>
 //                  --pipeline <arg>
-
 var reshardCommand = cli.Command{
 	Name:      "reshard",
 	Usage:     "reshard the redis cluster.",

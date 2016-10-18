@@ -5,6 +5,7 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+// check            host:port
 var checkCommand = cli.Command{
 	Name:      "check",
 	Usage:     "check the redis cluster.",

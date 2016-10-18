@@ -7,6 +7,8 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+// fix            host:port
+//                  --timeout <arg>
 var fixCommand = cli.Command{
 	Name:      "fix",
 	Usage:     "fix the redis cluster.",

@@ -5,6 +5,7 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+// info            host:port
 var infoCommand = cli.Command{
 	Name:      "info",
 	Usage:     "display the info of redis cluster.",

@@ -19,7 +19,6 @@ import (
 //                  --simulate
 //                  --pipeline <arg>
 //                  --threshold <arg>
-
 var rebalanceCommand = cli.Command{
 	Name:      "rebalance",
 	Usage:     "rebalance a redis cluster.",

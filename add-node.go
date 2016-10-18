@@ -8,7 +8,6 @@ import (
 //  add-node        new_host:new_port existing_host:existing_port
 //                  --slave
 //                  --master-id <arg>
-
 var addNodeCommand = cli.Command{
 	Name:      "add-node",
 	Aliases:   []string{"add"},
