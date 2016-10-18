@@ -51,11 +51,11 @@ func (self *RedisTrib) SetTimeoutClusterCmd(context *cli.Context) error {
 
 	for _, node := range self.nodes {
 		if _, err := node.Call("CONFIG", "set", "cluster-node-timeout", millisec); err != nil {
-			logrus.Errorf("ERR setting node-timeot for %s: %s", node.String(), err.Error())
+			logrus.Errorf("ERR setting node-timeot in set operation for %s: %s", node.String(), err.Error())
 			errCount += 1
 		} else {
 			if _, err := node.Call("CONFIG", "rewrite"); err != nil {
-				logrus.Errorf("ERR setting node-timeot for %s: %s", node.String(), err.Error())
+				logrus.Errorf("ERR setting node-timeot in rewrite operation for %s: %s", node.String(), err.Error())
 				errCount += 1
 			} else {
 				logrus.Printf("*** New timeout set for %s", node.String())
