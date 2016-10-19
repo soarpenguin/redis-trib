@@ -678,13 +678,19 @@ func (self *RedisTrib) MoveSlot(source *MovedNode, target *ClusterNode, o *MoveO
 			}
 
 			// XXX: migrate parameters check
-			_, err := source.Source.Call("migrate", target.Host(), target.Port(), "", 0, self.Timeout(), keys, keys)
+			var cmd []interface{}
+			cmd = append(cmd, target.Host(), target.Port(), "", 0, self.Timeout(), false, true, keys)
+			_, err := source.Source.Call("migrate", cmd...)
+			// _, _ = source.Source.Call("migrate", target.Host(), target.Port(), "", 0, self.Timeout(), "REPLACE", "KEYS", keys...)
 			if err != nil {
 				errinfo := err.Error()
 				if o.Fix && strings.Contains(errinfo, "BUSYKEY") {
 					logrus.Printf("*** Target key exists. Replacing it for FIX.")
 					// XXX: migrate parameters check
-					_, _ = source.Source.Call("migrate", target.Host(), target.Port(), "", 0, self.Timeout(), keys, keys)
+					cmd = cmd[:0]
+					cmd = append(cmd, target.Host(), target.Port(), "", 0, self.Timeout(), true, true, keys)
+					_, _ = source.Source.Call("migrate", cmd...)
+					// _, _ = source.Source.Call("migrate", target.Host(), target.Port(), "", 0, self.Timeout(), keys, keys)
 				} else {
 					logrus.Printf("\n")
 					logrus.Fatalf("[ERR] Calling MIGRATE: %s", errinfo)
