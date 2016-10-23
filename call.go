@@ -38,7 +38,7 @@ func (self *RedisTrib) CallClusterCmd(context *cli.Context) error {
 	cmdArgs := ToInterfaceArray(context.Args()[2:])
 
 	logrus.Printf(">>> Calling %s %s", cmd, cmdArgs)
-	_, err := self.EachPrint(cmd, cmdArgs...)
+	_, err := self.EachRunCommandAndPrint(cmd, cmdArgs...)
 	if err != nil {
 		logrus.Println("Command failed:", err)
 		return err

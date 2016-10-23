@@ -611,7 +611,7 @@ func (self *RedisTrib) EachRunCommand(f EachFunction, cmd string, args ...interf
 	return ies, nil
 }
 
-func (self *RedisTrib) EachPrint(cmd string, args ...interface{}) ([]*InterfaceErrorCombo, error) {
+func (self *RedisTrib) EachRunCommandAndPrint(cmd string, args ...interface{}) ([]*InterfaceErrorCombo, error) {
 	return self.EachRunCommand(
 		func(node *ClusterNode, result interface{}, err error, cmd string, args []interface{}) {
 			val, _ := redis.String(result, err)

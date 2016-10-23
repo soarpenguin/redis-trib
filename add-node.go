@@ -49,8 +49,7 @@ func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 
 	if newaddr = context.Args().Get(0); newaddr == "" {
 		logrus.Fatalf("Please check new_host:new_port for add-node command!")
-	}
-	if addr = context.Args().Get(1); addr == "" {
+	} else if addr = context.Args().Get(1); addr == "" {
 		logrus.Fatalf("Please check existing_host:existing_port for add-node command!")
 	}
 
@@ -92,7 +91,6 @@ func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 		logrus.Fatalf("Load new node %s info failed: %s!", newaddr, err.Error())
 	}
 	newNode.AssertEmpty()
-	//first := self.nodes[0]
 	self.AddNode(newNode)
 
 	// Send CLUSTER FORGET to all the nodes but the node to remove
@@ -108,6 +106,8 @@ func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 		if master != nil {
 			logrus.Printf(">>> Configure node as replica of %s.", master.String())
 			newNode.ClusterReplicateWithNodeID(master.Name())
+		} else {
+			logrus.Fatalf("Master node is nil, can't get master info.")
 		}
 	}
 	logrus.Printf("[OK] New node added correctly.")

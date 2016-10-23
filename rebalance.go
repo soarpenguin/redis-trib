@@ -21,7 +21,7 @@ import (
 //                  --threshold <arg>
 var rebalanceCommand = cli.Command{
 	Name:      "rebalance",
-	Usage:     "rebalance a redis cluster.",
+	Usage:     "rebalance the redis cluster.",
 	ArgsUsage: `host:port`,
 	Flags: []cli.Flag{
 		cli.StringSliceFlag{
