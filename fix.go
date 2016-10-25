@@ -21,10 +21,6 @@ var fixCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
-		if len(context.Args()) < 1 {
-			logrus.Fatalf("Must provide at least \"host:port\" for fix command!")
-		}
-
 		rt := NewRedisTrib()
 		if err := rt.FixClusterCmd(context); err != nil {
 			return err
@@ -35,7 +31,10 @@ var fixCommand = cli.Command{
 
 func (self *RedisTrib) FixClusterCmd(context *cli.Context) error {
 	var addr string
-	if addr = context.Args().Get(0); addr == "" {
+
+	if len(context.Args()) < 1 {
+		logrus.Fatalf("Must provide at least \"host:port\" for fix command!")
+	} else if addr = context.Args().Get(0); addr == "" {
 		return errors.New("Please check host:port for fix command.")
 	}
 

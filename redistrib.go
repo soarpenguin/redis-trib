@@ -700,23 +700,6 @@ func (self *RedisTrib) MoveSlot(source *MovedNode, target *ClusterNode, o *MoveO
 		if o.Dots {
 			logrus.Printf("%s", strings.Repeat(".", len(keys)))
 		}
-
-		//keys = source.r.cluster("getkeysinslot",slot,o[:pipeline])
-		//break if keys.length == 0
-		//begin
-		//    source.r.client.call(["migrate",target.info[:host],target.info[:port],"",0,@timeout,:keys,*keys])
-		//rescue => e
-		//    if o[:fix] && e.to_s =~ /BUSYKEY/
-		//        xputs "*** Target key exists. Replacing it for FIX."
-		//        source.r.client.call(["migrate",target.info[:host],target.info[:port],"",0,@timeout,:replace,:keys,*keys])
-		//    else
-		//        puts ""
-		//        xputs "[ERR] Calling MIGRATE: #{e}"
-		//        exit 1
-		//    end
-		//end
-		//print "."*keys.length if o[:dots]
-		//STDOUT.flush
 	}
 
 	//puts if !o[:quiet]

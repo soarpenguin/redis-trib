@@ -57,9 +57,6 @@ var rebalanceCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
-		if len(context.Args()) < 1 {
-			logrus.Fatalf("Must provide at least \"host:port\" for rebalance command!")
-		}
 		rt := NewRedisTrib()
 		if err := rt.RebalanceClusterCmd(context); err != nil {
 			return err
@@ -70,7 +67,10 @@ var rebalanceCommand = cli.Command{
 
 func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	var addr string
-	if addr = context.Args().Get(0); addr == "" {
+
+	if len(context.Args()) < 1 {
+		logrus.Fatalf("Must provide at least \"host:port\" for rebalance command!")
+	} else if addr = context.Args().Get(0); addr == "" {
 		return errors.New("Please check host:port for rebalance command.")
 	}
 

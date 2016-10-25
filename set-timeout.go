@@ -13,10 +13,6 @@ var setTimeoutCommand = cli.Command{
 	Usage:     "set timeout configure for redis cluster.",
 	ArgsUsage: `host:port milliseconds`,
 	Action: func(context *cli.Context) error {
-		if len(context.Args()) < 2 {
-			logrus.Fatalf("Must provide \"host:port milliseconds\" for set-timeout command!")
-		}
-
 		rt := NewRedisTrib()
 		if err := rt.SetTimeoutClusterCmd(context); err != nil {
 			return err
@@ -27,7 +23,10 @@ var setTimeoutCommand = cli.Command{
 
 func (self *RedisTrib) SetTimeoutClusterCmd(context *cli.Context) error {
 	var addr string
-	if addr = context.Args().Get(0); addr == "" {
+
+	if len(context.Args()) < 2 {
+		logrus.Fatalf("Must provide \"host:port milliseconds\" for set-timeout command!")
+	} else if addr = context.Args().Get(0); addr == "" {
 		logrus.Fatalf("Please check host:port for info command!")
 	}
 

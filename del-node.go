@@ -32,9 +32,7 @@ func (self *RedisTrib) DelNodeClusterCmd(context *cli.Context) error {
 
 	if addr = context.Args().Get(0); addr == "" {
 		logrus.Fatalf("Please check host:port for del-node command!")
-	}
-
-	if nodeid = context.Args().Get(1); nodeid == "" {
+	} else if nodeid = context.Args().Get(1); nodeid == "" {
 		logrus.Fatalf("Please check node_id for del-node command!")
 	}
 

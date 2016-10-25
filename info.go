@@ -11,7 +11,6 @@ var infoCommand = cli.Command{
 	Usage:     "display the info of redis cluster.",
 	ArgsUsage: `host:port`,
 	Action: func(context *cli.Context) error {
-
 		rt := NewRedisTrib()
 		if err := rt.InfoClusterCmd(context); err != nil {
 			return err
