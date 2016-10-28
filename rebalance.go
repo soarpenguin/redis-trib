@@ -20,9 +20,10 @@ import (
 //                  --pipeline <arg>
 //                  --threshold <arg>
 var rebalanceCommand = cli.Command{
-	Name:      "rebalance",
-	Usage:     "rebalance the redis cluster.",
-	ArgsUsage: `host:port`,
+	Name:        "rebalance",
+	Usage:       "rebalance the redis cluster.",
+	ArgsUsage:   `host:port`,
+	Description: `The rebalance command for rebalance a redis cluster.`,
 	Flags: []cli.Flag{
 		cli.StringSliceFlag{
 			Name:  "weight",

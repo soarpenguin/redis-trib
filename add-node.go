@@ -9,10 +9,11 @@ import (
 //                  --slave
 //                  --master-id <arg>
 var addNodeCommand = cli.Command{
-	Name:      "add-node",
-	Aliases:   []string{"add"},
-	Usage:     "add a new redis node to existed cluster.",
-	ArgsUsage: `new_host:new_port existing_host:existing_port`,
+	Name:        "add-node",
+	Aliases:     []string{"add"},
+	Usage:       "add a new redis node to existed cluster.",
+	Description: `The add-node command add a node to redis cluster.`,
+	ArgsUsage:   `new_host:new_port existing_host:existing_port`,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			Name: "slave",

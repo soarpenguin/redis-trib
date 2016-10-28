@@ -10,9 +10,10 @@ import (
 // fix            host:port
 //                  --timeout <arg>
 var fixCommand = cli.Command{
-	Name:      "fix",
-	Usage:     "fix the redis cluster.",
-	ArgsUsage: `host:port`,
+	Name:        "fix",
+	Usage:       "fix the redis cluster.",
+	ArgsUsage:   `host:port`,
+	Description: `The fix command for fix the redis cluster.`,
 	Flags: []cli.Flag{
 		cli.IntFlag{
 			Name:  "timeout, t",

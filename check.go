@@ -7,9 +7,10 @@ import (
 
 // check            host:port
 var checkCommand = cli.Command{
-	Name:      "check",
-	Usage:     "check the redis cluster.",
-	ArgsUsage: `host:port`,
+	Name:        "check",
+	Usage:       "check the redis cluster.",
+	ArgsUsage:   `host:port`,
+	Description: `The check command check for redis cluster.`,
 	Action: func(context *cli.Context) error {
 		rt := NewRedisTrib()
 		if err := rt.CheckClusterCmd(context); err != nil {

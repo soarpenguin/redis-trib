@@ -7,9 +7,10 @@ import (
 
 // info            host:port
 var infoCommand = cli.Command{
-	Name:      "info",
-	Usage:     "display the info of redis cluster.",
-	ArgsUsage: `host:port`,
+	Name:        "info",
+	Usage:       "display the info of redis cluster.",
+	ArgsUsage:   `host:port`,
+	Description: `The info command get infomation from redis cluster.`,
 	Action: func(context *cli.Context) error {
 		rt := NewRedisTrib()
 		if err := rt.InfoClusterCmd(context); err != nil {

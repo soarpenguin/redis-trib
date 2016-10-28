@@ -9,9 +9,10 @@ import (
 
 // set-timeout     host:port milliseconds
 var setTimeoutCommand = cli.Command{
-	Name:      "set-timeout",
-	Usage:     "set timeout configure for redis cluster.",
-	ArgsUsage: `host:port milliseconds`,
+	Name:        "set-timeout",
+	Usage:       "set timeout configure for redis cluster.",
+	ArgsUsage:   `host:port milliseconds`,
+	Description: `The set-timeout command set a timeout for redis cluster.`,
 	Action: func(context *cli.Context) error {
 		rt := NewRedisTrib()
 		if err := rt.SetTimeoutClusterCmd(context); err != nil {

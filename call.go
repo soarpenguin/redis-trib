@@ -9,9 +9,10 @@ import (
 
 // call            host:port command arg arg .. arg
 var callCommand = cli.Command{
-	Name:      "call",
-	Usage:     "run command in redis cluster.",
-	ArgsUsage: `host:port command arg arg .. arg`,
+	Name:        "call",
+	Usage:       "run command in redis cluster.",
+	ArgsUsage:   `host:port command arg arg .. arg`,
+	Description: `The call command for call cmd in every redis cluster node.`,
 	Action: func(context *cli.Context) error {
 		rt := NewRedisTrib()
 		if err := rt.CallClusterCmd(context); err != nil {

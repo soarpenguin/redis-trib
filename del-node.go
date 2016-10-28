@@ -9,10 +9,11 @@ import (
 
 // del-node        host:port node_id
 var delNodeCommand = cli.Command{
-	Name:      "del-node",
-	Aliases:   []string{"del"},
-	Usage:     "del a redis node from existed cluster.",
-	ArgsUsage: `host:port node_id`,
+	Name:        "del-node",
+	Aliases:     []string{"del"},
+	Usage:       "del a redis node from existed cluster.",
+	ArgsUsage:   `host:port node_id`,
+	Description: `The del-node command delete a node from redis cluster.`,
 	Action: func(context *cli.Context) error {
 		if len(context.Args()) < 2 {
 			logrus.Fatalf("Must provide \"host:port node_id\" for del-node command!")

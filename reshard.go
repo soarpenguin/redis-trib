@@ -20,9 +20,10 @@ import (
 //                  --timeout <arg>
 //                  --pipeline <arg>
 var reshardCommand = cli.Command{
-	Name:      "reshard",
-	Usage:     "reshard the redis cluster.",
-	ArgsUsage: `host:port`,
+	Name:        "reshard",
+	Usage:       "reshard the redis cluster.",
+	ArgsUsage:   `host:port`,
+	Description: `The reshard command for reshard a redis cluster.`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "from",

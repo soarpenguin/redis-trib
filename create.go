@@ -10,9 +10,10 @@ import (
 
 // create           host1:port1 ... hostN:portN
 var createCommand = cli.Command{
-	Name:      "create",
-	Usage:     "create a new redis cluster.",
-	ArgsUsage: `<host1:port1 ... hostN:portN>`,
+	Name:        "create",
+	Usage:       "create a new redis cluster.",
+	ArgsUsage:   `<host1:port1 ... hostN:portN>`,
+	Description: `The create command create a redis cluster.`,
 	Flags: []cli.Flag{
 		cli.IntFlag{
 			Name:  "replicas, r",

@@ -13,9 +13,10 @@ import (
 //                  --copy
 //                  --replace
 var importCommand = cli.Command{
-	Name:      "import",
-	Usage:     "import operation for redis cluster.",
-	ArgsUsage: `host:port`,
+	Name:        "import",
+	Usage:       "import operation for redis cluster.",
+	ArgsUsage:   `host:port`,
+	Description: `The import command for import data from one to another node.`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "from",
