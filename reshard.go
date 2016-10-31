@@ -52,6 +52,11 @@ var reshardCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
+		if context.NArg() < 1 {
+			fmt.Printf("Incorrect Usage.\n\n")
+			cli.ShowCommandHelp(context, "reshard")
+			logrus.Fatalf("Must provide at least \"host:port\" for reshard command!")
+		}
 		rt := NewRedisTrib()
 		if err := rt.ReshardClusterCmd(context); err != nil {
 			return err
@@ -63,9 +68,7 @@ var reshardCommand = cli.Command{
 func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 	var addr string
 
-	if len(context.Args()) < 1 {
-		logrus.Fatalf("Must provide at least \"host:port\" for reshard command!")
-	} else if addr = context.Args().Get(0); addr == "" {
+	if addr = context.Args().Get(0); addr == "" {
 		return errors.New("Please check host:port for reshard command.")
 	}
 

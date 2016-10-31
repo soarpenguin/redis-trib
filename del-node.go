@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -15,7 +16,9 @@ var delNodeCommand = cli.Command{
 	ArgsUsage:   `host:port node_id`,
 	Description: `The del-node command delete a node from redis cluster.`,
 	Action: func(context *cli.Context) error {
-		if len(context.Args()) < 2 {
+		if context.NArg() < 2 {
+			fmt.Printf("Incorrect Usage.\n\n")
+			cli.ShowCommandHelp(context, "del-node")
 			logrus.Fatalf("Must provide \"host:port node_id\" for del-node command!")
 		}
 

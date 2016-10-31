@@ -24,6 +24,12 @@ var createCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
+		if context.NArg() < 1 {
+			fmt.Printf("Incorrect Usage.\n\n")
+			cli.ShowCommandHelp(context, "create")
+			logrus.Fatalf("Must provide at least one \"host:port\" for create command!")
+		}
+
 		rt := NewRedisTrib()
 		if err := rt.CreateClusterCmd(context); err != nil {
 			return err
@@ -33,10 +39,6 @@ var createCommand = cli.Command{
 }
 
 func (self *RedisTrib) CreateClusterCmd(context *cli.Context) error {
-	if len(context.Args()) < 1 {
-		logrus.Fatalf("Must provide at least one \"host:port\" for create command!")
-	}
-
 	self.SetReplicasNum(context.Int("replicas"))
 
 	logrus.Printf(">>> Creating cluster")

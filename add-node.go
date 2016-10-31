@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 )
@@ -30,7 +32,9 @@ var addNodeCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
-		if len(context.Args()) < 2 {
+		if context.NArg() < 2 {
+			fmt.Printf("Incorrect Usage.\n\n")
+			cli.ShowCommandHelp(context, "add-node")
 			logrus.Fatalf("Must provide \"new_host:new_port existing_host:existing_port\" for add-node command!")
 		}
 

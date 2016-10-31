@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -14,6 +15,12 @@ var callCommand = cli.Command{
 	ArgsUsage:   `host:port command arg arg .. arg`,
 	Description: `The call command for call cmd in every redis cluster node.`,
 	Action: func(context *cli.Context) error {
+		if context.NArg() < 2 {
+			fmt.Printf("Incorrect Usage.\n\n")
+			cli.ShowCommandHelp(context, "call")
+			logrus.Fatalf("Must provide \"host:port command\" for call command!")
+		}
+
 		rt := NewRedisTrib()
 		if err := rt.CallClusterCmd(context); err != nil {
 			return err
@@ -25,9 +32,7 @@ var callCommand = cli.Command{
 func (self *RedisTrib) CallClusterCmd(context *cli.Context) error {
 	var addr string
 
-	if len(context.Args()) < 2 {
-		logrus.Fatalf("Must provide \"host:port command\" for call command!")
-	} else if addr = context.Args().Get(0); addr == "" {
+	if addr = context.Args().Get(0); addr == "" {
 		logrus.Fatalf("Please check host:port for call command!")
 	}
 

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 )
@@ -12,6 +14,12 @@ var checkCommand = cli.Command{
 	ArgsUsage:   `host:port`,
 	Description: `The check command check for redis cluster.`,
 	Action: func(context *cli.Context) error {
+		if context.NArg() < 1 {
+			fmt.Printf("Incorrect Usage.\n\n")
+			cli.ShowCommandHelp(context, "check")
+			logrus.Fatalf("Must provide host:port for check command!")
+		}
+
 		rt := NewRedisTrib()
 		if err := rt.CheckClusterCmd(context); err != nil {
 			return err
@@ -23,9 +31,7 @@ var checkCommand = cli.Command{
 func (self *RedisTrib) CheckClusterCmd(context *cli.Context) error {
 	var addr string
 
-	if len(context.Args()) < 1 {
-		logrus.Fatalf("Must provide host:port for check command!")
-	} else if addr = context.Args().Get(0); addr == "" {
+	if addr = context.Args().Get(0); addr == "" {
 		logrus.Fatalf("Please check host:port for check command!")
 	}
 

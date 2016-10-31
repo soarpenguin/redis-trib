@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
@@ -32,6 +33,12 @@ var importCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
+		if context.NArg() < 1 {
+			fmt.Printf("Incorrect Usage.\n\n")
+			cli.ShowCommandHelp(context, "import")
+			logrus.Fatalf("Must provide \"host:port\" for import command!")
+		}
+
 		rt := NewRedisTrib()
 		if err := rt.ImportClusterCmd(context); err != nil {
 			return err
@@ -44,9 +51,7 @@ func (self *RedisTrib) ImportClusterCmd(context *cli.Context) error {
 	var addr string
 	var source string
 
-	if len(context.Args()) < 1 {
-		logrus.Fatalf("Must provide \"host:port\" for import command!")
-	} else if source = context.String("from"); source == "" {
+	if source = context.String("from"); source == "" {
 		logrus.Fatalf("Option \"--from\" is required for import command!")
 	} else if addr = context.Args().Get(0); addr == "" {
 		return errors.New("Please check host:port for import command.")

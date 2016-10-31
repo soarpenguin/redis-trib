@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
@@ -22,6 +23,12 @@ var fixCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
+		if context.NArg() < 1 {
+			fmt.Printf("Incorrect Usage.\n\n")
+			cli.ShowCommandHelp(context, "fix")
+			logrus.Fatalf("Must provide at least \"host:port\" for fix command!")
+		}
+
 		rt := NewRedisTrib()
 		if err := rt.FixClusterCmd(context); err != nil {
 			return err
@@ -33,9 +40,7 @@ var fixCommand = cli.Command{
 func (self *RedisTrib) FixClusterCmd(context *cli.Context) error {
 	var addr string
 
-	if len(context.Args()) < 1 {
-		logrus.Fatalf("Must provide at least \"host:port\" for fix command!")
-	} else if addr = context.Args().Get(0); addr == "" {
+	if addr = context.Args().Get(0); addr == "" {
 		return errors.New("Please check host:port for fix command.")
 	}
 
