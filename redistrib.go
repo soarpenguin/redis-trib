@@ -536,6 +536,7 @@ func (self *RedisTrib) GetSlotOwners(slot int) [](*ClusterNode) {
 	return owners
 }
 
+// Load cluster info from a cluster node.
 func (self *RedisTrib) LoadClusterInfoFromNode(addr string) error {
 	node := NewClusterNode(addr)
 

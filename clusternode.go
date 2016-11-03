@@ -64,7 +64,7 @@ type ClusterNode struct {
 func NewClusterNode(addr string) (node *ClusterNode) {
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Fatalf("New cluster node error: %s", err)
 		return nil
 	}
 
