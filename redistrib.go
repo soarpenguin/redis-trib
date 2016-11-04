@@ -626,7 +626,7 @@ func (self *RedisTrib) EachRunCommandAndPrint(cmd string, args ...interface{}) (
 			}
 
 			if err != nil {
-				logrus.Println(err)
+				logrus.Errorf("%s", err)
 			}
 		}, cmd, args...)
 }
