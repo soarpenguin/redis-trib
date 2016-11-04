@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -35,9 +36,9 @@ func (self *RedisTrib) DelNodeClusterCmd(context *cli.Context) error {
 	var nodeid string
 
 	if addr = context.Args().Get(0); addr == "" {
-		logrus.Fatalf("Please check host:port for del-node command!")
+		return errors.New("Please check host:port for del-node command!")
 	} else if nodeid = context.Args().Get(1); nodeid == "" {
-		logrus.Fatalf("Please check node_id for del-node command!")
+		return errors.New("Please check node_id for del-node command!")
 	}
 
 	nodeid = strings.ToLower(nodeid)

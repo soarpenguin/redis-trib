@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
@@ -32,7 +33,7 @@ func (self *RedisTrib) InfoClusterCmd(context *cli.Context) error {
 	var addr string
 
 	if addr = context.Args().Get(0); addr == "" {
-		logrus.Fatalf("Please check host:port for info command!")
+		return errors.New("Please check host:port for info command!")
 	}
 
 	if err := self.LoadClusterInfoFromNode(addr); err != nil {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -33,7 +34,7 @@ func (self *RedisTrib) CallClusterCmd(context *cli.Context) error {
 	var addr string
 
 	if addr = context.Args().Get(0); addr == "" {
-		logrus.Fatalf("Please check host:port for call command!")
+		return errors.New("Please check host:port for call command!")
 	}
 
 	if err := self.LoadClusterInfoFromNode(addr); err != nil {

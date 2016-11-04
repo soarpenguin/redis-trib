@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
@@ -53,9 +54,9 @@ func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 	var master *ClusterNode
 
 	if newaddr = context.Args().Get(0); newaddr == "" {
-		logrus.Fatalf("Please check new_host:new_port for add-node command!")
+		return errors.New("Please check new_host:new_port for add-node command!")
 	} else if addr = context.Args().Get(1); addr == "" {
-		logrus.Fatalf("Please check existing_host:existing_port for add-node command!")
+		return errors.New("Please check existing_host:existing_port for add-node command!")
 	}
 
 	logrus.Printf(">>> Adding node %s to cluster %s", newaddr, addr)
