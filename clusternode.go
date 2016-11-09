@@ -64,7 +64,7 @@ type ClusterNode struct {
 func NewClusterNode(addr string) (node *ClusterNode) {
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
-		logrus.Fatalf("New cluster node error: %s", err)
+		logrus.Fatalf("New cluster node error: %s!", err)
 		return nil
 	}
 
@@ -181,18 +181,18 @@ func (self *ClusterNode) Connect(abort bool) (err error) {
 	client, err := redis.Dial("tcp", addr, redis.DialConnectTimeout(60*time.Second))
 	if err != nil {
 		if abort {
-			logrus.Fatalf("Sorry, connect to node %s failed in abort mode", addr)
+			logrus.Fatalf("Sorry, connect to node %s failed in abort mode!", addr)
 		} else {
-			logrus.Errorf("Sorry, can't connect to node %s", addr)
+			logrus.Errorf("Sorry, can't connect to node %s!", addr)
 			return err
 		}
 	}
 
 	if _, err = client.Do("PING"); err != nil {
 		if abort {
-			logrus.Fatalf("Sorry, ping node %s failed in abort mode", addr)
+			logrus.Fatalf("Sorry, ping node %s failed in abort mode!", addr)
 		} else {
-			logrus.Errorf("Sorry, ping node %s failed", addr)
+			logrus.Errorf("Sorry, ping node %s failed!", addr)
 			return err
 		}
 	}
@@ -217,7 +217,7 @@ func (self *ClusterNode) Dbsize() (int, error) {
 func (self *ClusterNode) ClusterAddNode(addr string) (ret string, err error) {
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil || host == "" || port == "" {
-		return "", fmt.Errorf("Bad format of host:port: %s", addr)
+		return "", fmt.Errorf("Bad format of host:port: %s!", addr)
 	}
 	return redis.String(self.Call("CLUSTER", "meet", host, port))
 }

@@ -16,7 +16,7 @@ var setTimeoutCommand = cli.Command{
 	ArgsUsage:   `host:port milliseconds`,
 	Description: `The set-timeout command set a timeout for redis cluster.`,
 	Action: func(context *cli.Context) error {
-		if context.NArg() < 2 {
+		if context.NArg() != 2 {
 			fmt.Printf("Incorrect Usage.\n\n")
 			cli.ShowCommandHelp(context, "set-timeout")
 			logrus.Fatalf("Must provide \"host:port milliseconds\" for set-timeout command!")

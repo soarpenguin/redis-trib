@@ -33,7 +33,7 @@ var importCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
-		if context.NArg() < 1 {
+		if context.NArg() != 1 {
 			fmt.Printf("Incorrect Usage.\n\n")
 			cli.ShowCommandHelp(context, "import")
 			logrus.Fatalf("Must provide \"host:port\" for import command!")

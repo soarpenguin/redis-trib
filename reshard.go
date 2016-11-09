@@ -52,7 +52,7 @@ var reshardCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
-		if context.NArg() < 1 {
+		if context.NArg() != 1 {
 			fmt.Printf("Incorrect Usage.\n\n")
 			cli.ShowCommandHelp(context, "reshard")
 			logrus.Fatalf("Must provide at least \"host:port\" for reshard command!")
