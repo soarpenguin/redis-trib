@@ -4,21 +4,15 @@ COMMIT := $(shell git rev-parse HEAD 2> /dev/null || true)
 VERSION	= $(shell git describe --tags --abbrev=0 2> /dev/null)
 GITHUB_SRC := github.com/soarpenguin
 MODULE := redis-trib
-REDIS_LINK := $(CURDIR)/Godeps/_workspace/src/$(GITHUB_SRC)
-export GOPATH := $(CURDIR)/Godeps/_workspace
 #GOPATH := $(shell godep path):${GOPATH}
 
 ## Make bin for redis-trib.
-bin: $(REDIS_LINK)
+bin:
 	go build -i -ldflags "-X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o redis-trib .
 
 godep:
 	go get github.com/tools/godep
 	godep restore
-
-$(REDIS_LINK):
-	mkdir -p ${REDIS_LINK}
-	ln -sfn $(CURDIR) $(REDIS_LINK)/$(MODULE)
 
 ## Get vet go tools.
 vet:
