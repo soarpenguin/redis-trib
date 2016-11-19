@@ -1,12 +1,13 @@
 default: help
 
+HOST_GOLANG_VERSION := $(go version | cut -d ' ' -f3 | cut -c 3-)
 MODULE := redis-trib
 ifneq (,$(wildcard .git/.*))
     COMMIT = $(shell git rev-parse HEAD 2> /dev/null || true)
     VERSION	= $(shell git describe --tags --abbrev=0 2> /dev/null)
 else
-    COMMIT =
-    VERSION =
+    COMMIT = "unknown"
+    VERSION = "unknown"
 endif
 
 ## Make bin for redis-trib.
