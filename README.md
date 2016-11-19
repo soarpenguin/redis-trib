@@ -10,7 +10,7 @@ Inspired heavily by [redis-trib.go][] and the original [redis-trib.rb][].
 * [redigo][]
 * [cli][]
 
-Dependencies are handled by [godep][], simple install it and type `godep restore` to fetch them.
+Dependencies are handled by [govendor][], simple install it and type `govendor add +external` to fetch them.
 
 ## Install
 
@@ -18,7 +18,7 @@ Dependencies are handled by [godep][], simple install it and type `godep restore
 ```console
 $ git clone https://github.com/soarpenguin/redis-trib.git
 $ cd redis-trib
-$ make godep
+$ make govendor
 $ make bin
 $ PROG=./redis-trib source ./autocomplete/bash_autocomplete
 ```
@@ -75,4 +75,4 @@ GLOBAL OPTIONS:
 [redis-trib.rb]: https://github.com/antirez/redis/blob/unstable/src/redis-trib.rb
 [redigo]: https://github.com/garyburd/redigo/
 [cli]: https://github.com/codegangsta/cli
-[godep]: https://github.com/tools/godep
+[govendor]: https://github.com/kardianos/govendor

@@ -1,24 +1,29 @@
 default: help
 
-COMMIT := $(shell git rev-parse HEAD 2> /dev/null || true)
-VERSION	= $(shell git describe --tags --abbrev=0 2> /dev/null)
-GITHUB_SRC := github.com/soarpenguin
+HOST_GOLANG_VERSION := $(go version | cut -d ' ' -f3 | cut -c 3-)
 MODULE := redis-trib
-REDIS_LINK := $(CURDIR)/Godeps/_workspace/src/$(GITHUB_SRC)
-export GOPATH := $(CURDIR)/Godeps/_workspace
-#GOPATH := $(shell godep path):${GOPATH}
+ifneq (,$(wildcard .git/.*))
+    COMMIT = $(shell git rev-parse HEAD 2> /dev/null || true)
+    VERSION	= $(shell git describe --tags --abbrev=0 2> /dev/null)
+else
+    COMMIT = "unknown"
+    VERSION = "unknown"
+endif
 
 ## Make bin for redis-trib.
-bin: $(REDIS_LINK)
+bin:
 	go build -i -ldflags "-X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o redis-trib .
 
+## Get godep go tools.
 godep:
 	go get github.com/tools/godep
 	godep restore
 
-$(REDIS_LINK):
-	mkdir -p ${REDIS_LINK}
-	ln -sfn $(CURDIR) $(REDIS_LINK)/$(MODULE)
+## Get govendor go tools.
+govendor:
+	go get -u -v github.com/kardianos/govendor
+	govendor init
+	govendor add +external
 
 ## Get vet go tools.
 vet:
