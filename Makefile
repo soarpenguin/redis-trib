@@ -14,6 +14,10 @@ endif
 bin:
 	go build -i -ldflags "-X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o redis-trib .
 
+## Make static link bin for redis-trib.
+static-bin: $(REDIS_LINK)
+	go build -i -ldflags "-w -extldflags -static -X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o redis-trib .
+
 ## Get godep go tools.
 godep:
 	go get github.com/tools/godep
