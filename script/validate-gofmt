@@ -1,9 +1,12 @@
 #!/bin/bash
 
-source "$(dirname "$BASH_SOURCE")/.validate"
+export SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "${SCRIPTDIR}/.validate"
 
 IFS=$'\n'
-files=( $(validate_diff --diff-filter=ACMR --name-only -- '*.go' | grep -v '^Godeps/' || true) )
+files=( $(validate_diff --diff-filter=ACMR --name-only -- '*.go' |
+    grep -v '^vendor/' |
+    grep -v '^Godeps/' || true) )
 unset IFS
 
 badFiles=()
@@ -28,4 +31,3 @@ else
 	} >&2
 	false
 fi
-
