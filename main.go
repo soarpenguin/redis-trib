@@ -45,6 +45,14 @@ var mainFlags = []cli.Flag{
 	},
 }
 
+// runtimeBeforeSubcommands is the function to run before command-line
+// parsing occurs.
+var runtimeBeforeSubcommands = beforeSubcommands
+
+// runtimeCommandNotFound is the function to handle an invalid sub-command.
+var runtimeCommandNotFound = commandNotFound
+
+// mainCommands is all sub-command
 var mainCommands = []cli.Command{
 	addNodeCommand,
 	callCommand,
@@ -57,6 +65,35 @@ var mainCommands = []cli.Command{
 	rebalanceCommand,
 	reshardCommand,
 	setTimeoutCommand,
+}
+
+func beforeSubcommands(context *cli.Context) error {
+	if context.GlobalBool("debug") {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+	if path := context.GlobalString("log"); path != "" {
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_SYNC, 0666)
+		if err != nil {
+			return err
+		}
+		logrus.SetOutput(f)
+	}
+	switch context.GlobalString("log-format") {
+	case "text":
+		// retain logrus's default.
+	case "json":
+		logrus.SetFormatter(new(logrus.JSONFormatter))
+	default:
+		logrus.Fatalf("unknown log-format %q", context.GlobalString("log-format"))
+	}
+	return nil
+}
+
+// function called when an invalid command is specified which causes the
+// runtime to error.
+func commandNotFound(c *cli.Context, command string) {
+	err := fmt.Errorf("Invalid command %q", command)
+	fatal(err)
 }
 
 func main() {
@@ -74,28 +111,10 @@ func main() {
 	app.Author = "soarpenguin"
 	app.Email = "soarpenguin@gmail.com"
 	app.EnableBashCompletion = true
+	app.CommandNotFound = runtimeCommandNotFound
+	app.Before = beforeSubcommands
 	app.Commands = mainCommands
-	app.Before = func(context *cli.Context) error {
-		if context.GlobalBool("debug") {
-			logrus.SetLevel(logrus.DebugLevel)
-		}
-		if path := context.GlobalString("log"); path != "" {
-			f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_SYNC, 0666)
-			if err != nil {
-				return err
-			}
-			logrus.SetOutput(f)
-		}
-		switch context.GlobalString("log-format") {
-		case "text":
-			// retain logrus's default.
-		case "json":
-			logrus.SetFormatter(new(logrus.JSONFormatter))
-		default:
-			logrus.Fatalf("unknown log-format %q", context.GlobalString("log-format"))
-		}
-		return nil
-	}
+
 	if err := app.Run(os.Args); err != nil {
 		fatal(err)
 	}
