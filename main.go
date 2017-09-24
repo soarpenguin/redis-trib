@@ -18,13 +18,16 @@ var version = ""
 var gitCommit = ""
 
 const (
+	// name holds the name of this program
+	name  = "redis-trib"
 	usage = `Redis Cluster command line utility.
 
 For check, fix, reshard, del-node, set-timeout you can specify the host and port
 of any working node in the cluster.`
 )
 
-var mainFlags = []cli.Flag{
+// runtimeFlags is the list of supported global command-line flags
+var runtimeFlags = []cli.Flag{
 	cli.BoolFlag{
 		Name:  "debug",
 		Usage: "enable debug output for logging",
@@ -52,8 +55,8 @@ var runtimeBeforeSubcommands = beforeSubcommands
 // runtimeCommandNotFound is the function to handle an invalid sub-command.
 var runtimeCommandNotFound = commandNotFound
 
-// mainCommands is all sub-command
-var mainCommands = []cli.Command{
+// runtimeCommands is all sub-command
+var runtimeCommands = []cli.Command{
 	addNodeCommand,
 	callCommand,
 	checkCommand,
@@ -78,6 +81,7 @@ func beforeSubcommands(context *cli.Context) error {
 		}
 		logrus.SetOutput(f)
 	}
+
 	switch context.GlobalString("log-format") {
 	case "text":
 		// retain logrus's default.
@@ -96,24 +100,32 @@ func commandNotFound(c *cli.Context, command string) {
 	fatal(err)
 }
 
-func main() {
-	app := cli.NewApp()
-	app.Name = "redis-trib"
-	app.Usage = usage
+// makeVersionString returns a multi-line string describing the runtime version.
+func makeVersionString() string {
 	v := []string{
 		version,
 	}
 	if gitCommit != "" {
 		v = append(v, fmt.Sprintf("commit: %s", gitCommit))
 	}
-	app.Version = strings.Join(v, "\n")
-	app.Flags = mainFlags
+
+	return strings.Join(v, "\n")
+}
+
+func main() {
+	app := cli.NewApp()
+
+	app.Name = name
+	app.Writer = os.Stdout
+	app.Usage = usage
+	app.Version = makeVersionString()
+	app.Flags = runtimeFlags
 	app.Author = "soarpenguin"
 	app.Email = "soarpenguin@gmail.com"
 	app.EnableBashCompletion = true
 	app.CommandNotFound = runtimeCommandNotFound
-	app.Before = beforeSubcommands
-	app.Commands = mainCommands
+	app.Before = runtimeBeforeSubcommands
+	app.Commands = runtimeCommands
 
 	if err := app.Run(os.Args); err != nil {
 		fatal(err)
