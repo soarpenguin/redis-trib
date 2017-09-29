@@ -164,7 +164,7 @@ func (self *RedisTrib) ShowClusterInfo() {
 	}
 
 	logrus.Printf("[OK] %d keys in %d masters.", keys, masters)
-	kpslot := float64(keys) / 16384.0
+	kpslot := float64(keys) / float64(ClusterHashSlots)
 	logrus.Printf("%.2f keys per slot on average.", kpslot)
 }
 

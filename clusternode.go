@@ -178,10 +178,6 @@ func (self *ClusterNode) Connect(abort bool) (err error) {
 		return nil
 	}
 
-	if verbose {
-		logrus.Debug("Connecting to node %s", self.String())
-	}
-
 	addr := fmt.Sprintf("%s:%d", self.info.host, self.info.port)
 	//client, err := redis.DialTimeout("tcp", addr, 0, 1*time.Second, 1*time.Second)
 	client, err := redis.Dial("tcp", addr, redis.DialConnectTimeout(60*time.Second))
@@ -201,6 +197,10 @@ func (self *ClusterNode) Connect(abort bool) (err error) {
 			logrus.Errorf("Sorry, ping node %s failed!", addr)
 			return err
 		}
+	}
+
+	if verbose {
+		logrus.Debug("Connecting to node %s OK", self.String())
 	}
 
 	self.r = client
