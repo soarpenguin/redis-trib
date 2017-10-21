@@ -10,8 +10,10 @@ else
     VERSION = "unknown"
 endif
 
+GOPATH = $(shell cd ./ && pwd)/vendor
+
 ## Make bin for redis-trib.
-bin:
+bin: $(REDIS_LINK)
 	go build -i -ldflags "-X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o redis-trib .
 
 ## Make static link bin for redis-trib.
@@ -47,7 +49,6 @@ clean:
 #	find . -name '*.created' -exec rm -f {} +
 	-rm -rf var
 	-rm -f redis-trib
-	-rm -rf ${REDIS_LINK}/
 
 help: # Some kind of magic from https://gist.github.com/rcmachado/af3db315e31383502660
 	$(info Available targets)
