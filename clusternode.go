@@ -10,6 +10,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
+	"os"
 )
 
 const (
@@ -18,7 +19,7 @@ const (
 	AssignedHashSlot
 )
 
-var verbose bool = false
+var verbose = false
 
 ///////////////////////////////////////////////////////////
 // detail info for redis node.
@@ -68,6 +69,10 @@ func NewClusterNode(addr string) (node *ClusterNode) {
 	if err != nil {
 		logrus.Fatalf("New cluster node error: %s!", err)
 		return nil
+	}
+
+	if os.Getenv("ENV_MODE_VERBOSE") != "" {
+		verbose = true
 	}
 
 	p, _ := strconv.ParseUint(port, 10, 0)
@@ -177,7 +182,7 @@ func (self *ClusterNode) Connect(abort bool) (err error) {
 	if self.r != nil {
 		return nil
 	}
-
+	
 	addr := fmt.Sprintf("%s:%d", self.info.host, self.info.port)
 	//client, err := redis.DialTimeout("tcp", addr, 0, 1*time.Second, 1*time.Second)
 	client, err := redis.Dial("tcp", addr, redis.DialConnectTimeout(60*time.Second))

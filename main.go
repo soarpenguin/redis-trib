@@ -74,6 +74,11 @@ func beforeSubcommands(context *cli.Context) error {
 	if context.GlobalBool("debug") {
 		logrus.SetLevel(logrus.DebugLevel)
 	}
+
+	if context.GlobalBool("verbose") {
+		os.Setenv("ENV_MODE_VERBOSE", "true")
+	}
+
 	if path := context.GlobalString("log"); path != "" {
 		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_SYNC, 0666)
 		if err != nil {
