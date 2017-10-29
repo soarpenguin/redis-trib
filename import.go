@@ -54,7 +54,7 @@ func (self *RedisTrib) ImportClusterCmd(context *cli.Context) error {
 	if source = context.String("from"); source == "" {
 		logrus.Fatalf("Option \"--from\" is required for import command!")
 	} else if addr = context.Args().Get(0); addr == "" {
-		return errors.New("Please check host:port for import command.")
+		return errors.New("please check host:port for import command")
 	}
 
 	useCopy := context.Bool("copy")

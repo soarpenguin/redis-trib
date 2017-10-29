@@ -19,8 +19,6 @@ const (
 	AssignedHashSlot
 )
 
-var verbose = false
-
 ///////////////////////////////////////////////////////////
 // detail info for redis node.
 type NodeInfo struct {
@@ -62,6 +60,7 @@ type ClusterNode struct {
 	dirty         bool
 	friends       [](*NodeInfo)
 	replicasNodes [](*ClusterNode)
+	verbose       bool
 }
 
 func NewClusterNode(addr string) (node *ClusterNode) {
@@ -69,10 +68,6 @@ func NewClusterNode(addr string) (node *ClusterNode) {
 	if err != nil {
 		logrus.Fatalf("New cluster node error: %s!", err)
 		return nil
-	}
-
-	if os.Getenv("ENV_MODE_VERBOSE") != "" {
-		verbose = true
 	}
 
 	p, _ := strconv.ParseUint(port, 10, 0)
@@ -87,6 +82,11 @@ func NewClusterNode(addr string) (node *ClusterNode) {
 			replicate: "",
 		},
 		dirty: false,
+		verbose: false,
+	}
+
+	if os.Getenv("ENV_MODE_VERBOSE") != "" {
+		node.verbose = true
 	}
 
 	return node
@@ -182,7 +182,7 @@ func (self *ClusterNode) Connect(abort bool) (err error) {
 	if self.r != nil {
 		return nil
 	}
-	
+
 	addr := fmt.Sprintf("%s:%d", self.info.host, self.info.port)
 	//client, err := redis.DialTimeout("tcp", addr, 0, 1*time.Second, 1*time.Second)
 	client, err := redis.Dial("tcp", addr, redis.DialConnectTimeout(60*time.Second))
@@ -204,8 +204,8 @@ func (self *ClusterNode) Connect(abort bool) (err error) {
 		}
 	}
 
-	if verbose {
-		logrus.Debug("Connecting to node %s OK", self.String())
+	if self.verbose {
+		logrus.Printf("Connecting to node %s OK", self.String())
 	}
 
 	self.r = client

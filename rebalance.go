@@ -77,7 +77,7 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	var addr string
 
 	if addr = context.Args().Get(0); addr == "" {
-		return errors.New("Please check host:port for rebalance command.")
+		return errors.New("please check host:port for rebalance command")
 	}
 
 	// Load nodes info before parsing options, otherwise we can't

@@ -34,7 +34,7 @@ func (self *RedisTrib) SetTimeoutClusterCmd(context *cli.Context) error {
 	var addr string
 
 	if addr = context.Args().Get(0); addr == "" {
-		return errors.New("Please check host:port for info command!")
+		return errors.New("please check host:port for info command")
 	}
 
 	timeout := context.Args().Get(1)

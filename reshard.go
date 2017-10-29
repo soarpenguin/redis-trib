@@ -69,7 +69,7 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 	var addr string
 
 	if addr = context.Args().Get(0); addr == "" {
-		return errors.New("Please check host:port for reshard command.")
+		return errors.New("please check host:port for reshard command")
 	}
 
 	if err := self.LoadClusterInfoFromNode(addr); err != nil {

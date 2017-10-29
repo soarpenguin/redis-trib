@@ -13,7 +13,7 @@ var infoCommand = cli.Command{
 	Name:        "info",
 	Usage:       "display the info of redis cluster.",
 	ArgsUsage:   `host:port`,
-	Description: `The info command get infomation from redis cluster.`,
+	Description: `The info command get info from redis cluster.`,
 	Action: func(context *cli.Context) error {
 		if context.NArg() != 1 {
 			fmt.Printf("Incorrect Usage.\n\n")
@@ -33,7 +33,7 @@ func (self *RedisTrib) InfoClusterCmd(context *cli.Context) error {
 	var addr string
 
 	if addr = context.Args().Get(0); addr == "" {
-		return errors.New("Please check host:port for info command!")
+		return errors.New("please check host:port for info command")
 	}
 
 	if err := self.LoadClusterInfoFromNode(addr); err != nil {

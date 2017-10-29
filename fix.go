@@ -41,7 +41,7 @@ func (self *RedisTrib) FixClusterCmd(context *cli.Context) error {
 	var addr string
 
 	if addr = context.Args().Get(0); addr == "" {
-		return errors.New("Please check host:port for fix command.")
+		return errors.New("please check host:port for fix command")
 	}
 
 	self.SetFix(true)

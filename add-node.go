@@ -54,9 +54,9 @@ func (self *RedisTrib) AddNodeClusterCmd(context *cli.Context) error {
 	var master *ClusterNode
 
 	if newaddr = context.Args().Get(0); newaddr == "" {
-		return errors.New("Please check new_host:new_port for add-node command!")
+		return errors.New("please check new_host:new_port for add-node command")
 	} else if addr = context.Args().Get(1); addr == "" {
-		return errors.New("Please check existing_host:existing_port for add-node command!")
+		return errors.New("please check existing_host:existing_port for add-node command")
 	}
 
 	logrus.Printf(">>> Adding node %s to cluster %s", newaddr, addr)
