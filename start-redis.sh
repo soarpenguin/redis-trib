@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# install redis use brew
+# brew install redis@3.2
+
+# export redis-server cmd path
 export PATH=${PATH}:/usr/local/opt/redis@3.2/bin/
 CURDIR=$(cd "$(dirname "$0")"; pwd);
 
