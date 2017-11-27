@@ -10,14 +10,14 @@ else
     VERSION = "unknown"
 endif
 
-GOPATH = $(shell cd ./ && pwd)/vendor
+GOPATH := $(shell cd ./ && pwd)/vendor:$(GOPATH)
 
 ## Make bin for redis-trib.
-bin: $(REDIS_LINK)
+bin:
 	go build -i -ldflags "-X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o redis-trib .
 
 ## Make static link bin for redis-trib.
-static-bin: $(REDIS_LINK)
+static-bin:
 	go build -i -ldflags "-w -extldflags -static -X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o redis-trib .
 
 ## Get godep go tools.
