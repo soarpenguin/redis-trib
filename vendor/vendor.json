@@ -33,8 +33,18 @@
 			"revisionTime": "2016-06-28T05:30:56Z"
 		},
 		{
+			"checksumSHA1": "X1NTlfcau2XcV6WtAHF6b/DECOA=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "kALQxpz+0xx9vn+SdbjA6MQfpCk=",
 			"path": "golang.org/x/sys/unix",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "du9BFcn4Qlm/4H3jlRBGGH43aQI=",
+			"path": "golang.org/x/sys/windows",
 			"revision": ""
 		},
 		{
