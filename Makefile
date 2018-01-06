@@ -14,11 +14,17 @@ GOPATH := $(shell cd ./ && pwd)/vendor:$(GOPATH)
 
 ## Make bin for redis-trib.
 bin:
+	@echo "GOPATH:" $$GOPATH
 	go build -i -ldflags "-X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o redis-trib .
 
 ## Make static link bin for redis-trib.
 static-bin:
+	@echo "GOPATH:" $$GOPATH
 	go build -i -ldflags "-w -extldflags -static -X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o redis-trib .
+
+## Build debug trace for redis-trib
+debug:
+	go build -n -v -i -ldflags "-X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o elastic-trib .
 
 ## Get godep go tools.
 godep:
@@ -62,6 +68,6 @@ help: # Some kind of magic from https://gist.github.com/rcmachado/af3db315e31383
 			printf "\033[1;31m%-" width "s\033[0m %s\n", $$1, helpMsg; \
 	}                                                              \
 	{ helpMsg = $$0 }'                                             \
-	width=$$(grep -o '^[a-zA-Z_0-9]\+:' $(MAKEFILE_LIST) | wc -L)  \
+	width=$$(grep -o '^[a-zA-Z_0-9]\+:' $(MAKEFILE_LIST) | wc -L 2> /dev/null)  \
 	$(MAKEFILE_LIST)
 
