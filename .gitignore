@@ -1,3 +1,4 @@
 redis-trib*
 tags
 vendor/pkg/*
+.idea
