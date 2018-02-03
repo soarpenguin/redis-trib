@@ -10,7 +10,7 @@ else
     VERSION = "unknown"
 endif
 
-#GOPATH := $(shell cd ./ && pwd)/vendor:$(GOPATH)
+#export GOPATH := $(shell cd ./ && pwd)/vendor:$(GOPATH)
 
 ## Make bin for $MODULE.
 bin:
