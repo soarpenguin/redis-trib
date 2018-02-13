@@ -50,7 +50,7 @@ validate:
 
 ## Run test case for this go project.
 test:
-	go test -v ./...
+	go test $(go list ./... | grep -v '/vendor/')
 
 ## Clean everything (including stray volumes).
 clean:
