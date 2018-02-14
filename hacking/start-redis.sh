@@ -10,3 +10,7 @@ CURDIR=$(cd "$(dirname "$0")"; pwd);
 redis-server ${CURDIR}/config/redis-6378.conf &
 redis-server ${CURDIR}/config/redis-6379.conf &
 redis-server ${CURDIR}/config/redis-6380.conf &
+
+redis-server ${CURDIR}/config/redis-7378.conf &
+redis-server ${CURDIR}/config/redis-7379.conf &
+redis-server ${CURDIR}/config/redis-7380.conf &
