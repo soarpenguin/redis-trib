@@ -83,7 +83,7 @@ func (self *RedisTrib) ImportClusterCmd(context *cli.Context) error {
 
 	// Build a slot -> node map
 	slots := make(map[int]*ClusterNode)
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		for key, _ := range node.Slots() {
 			slots[key] = node
 		}

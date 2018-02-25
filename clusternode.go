@@ -81,7 +81,7 @@ func NewClusterNode(addr string) (node *ClusterNode) {
 			importing: make(map[int]string),
 			replicate: "",
 		},
-		dirty: false,
+		dirty:   false,
 		verbose: false,
 	}
 
@@ -175,7 +175,11 @@ func (self *ClusterNode) AddReplicasNode(node *ClusterNode) {
 }
 
 func (self *ClusterNode) String() string {
-	return fmt.Sprintf("%s:%d", self.info.host, self.info.port)
+	return self.info.String()
+}
+
+func (self *ClusterNode) NodeString() string {
+	return self.info.String()
 }
 
 func (self *ClusterNode) Connect(abort bool) (err error) {
@@ -299,7 +303,8 @@ func (self *ClusterNode) LoadInfo(getfriends bool) (err error) {
 
 		sent, _ := strconv.ParseInt(parts[4], 0, 32)
 		recv, _ := strconv.ParseInt(parts[5], 0, 32)
-		host, port, _ := net.SplitHostPort(parts[1])
+		addr := strings.Split(parts[1], "@")[0]
+		host, port, _ := net.SplitHostPort(addr)
 		p, _ := strconv.ParseUint(port, 10, 0)
 
 		node := &NodeInfo{
@@ -323,7 +328,18 @@ func (self *ClusterNode) LoadInfo(getfriends bool) (err error) {
 		}
 
 		if strings.Contains(parts[2], "myself") {
-			self.info = node
+			if self.info != nil {
+				self.info.name = node.name
+				self.info.addr = node.addr
+				self.info.flags = node.flags
+				self.info.replicate = node.replicate
+				self.info.pingSent = node.pingSent
+				self.info.pingRecv = node.pingRecv
+				self.info.linkStatus = node.linkStatus
+			} else {
+				self.info = node
+			}
+
 			for i := 8; i < len(parts); i++ {
 				slots := parts[i]
 				if strings.Contains(slots, "<") {

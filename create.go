@@ -57,7 +57,7 @@ func (self *RedisTrib) CreateClusterCmd(context *cli.Context) error {
 	}
 
 	self.CheckCreateParameters()
-	logrus.Printf(">>> Performing hash slots allocation on %d nodes...", len(self.nodes))
+	logrus.Printf(">>> Performing hash slots allocation on %d nodes...", len(self.Nodes()))
 	self.AllocSlots()
 	self.ShowNodes()
 	YesOrDie("Can I set the above configuration?")
@@ -80,19 +80,19 @@ func (self *RedisTrib) CreateClusterCmd(context *cli.Context) error {
 
 func (self *RedisTrib) CheckCreateParameters() bool {
 	repOpt := self.ReplicasNum()
-	masters := len(self.nodes) / (repOpt + 1)
+	masters := len(self.Nodes()) / (repOpt + 1)
 
 	if masters < 3 {
 		logrus.Fatalf("*** ERROR: Invalid configuration for cluster creation.\n"+
 			"\t   *** Redis Cluster requires at least 3 master nodes.\n"+
 			"\t   *** This is not possible with %d nodes and %d replicas per node.\n"+
-			"\t   *** At least %d nodes are required.", len(self.nodes), repOpt, 3*(repOpt+1))
+			"\t   *** At least %d nodes are required.", len(self.Nodes()), repOpt, 3*(repOpt+1))
 	}
 	return true
 }
 
 func (self *RedisTrib) FlushNodesConfig() {
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		node.FlushNodeConfig()
 	}
 }
@@ -101,7 +101,7 @@ func (self *RedisTrib) JoinCluster() {
 	var first *ClusterNode = nil
 	var addr string
 
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if first == nil {
 			first = node
 			addr = fmt.Sprintf("%s:%d", node.Host(), node.Port())
@@ -114,8 +114,8 @@ func (self *RedisTrib) JoinCluster() {
 func (self *RedisTrib) AllocSlots() {
 	// TODO:
 	var masters [](*ClusterNode)
-	nodeNum := len(self.nodes)
-	mastersNum := len(self.nodes) / (self.ReplicasNum() + 1)
+	nodeNum := len(self.Nodes())
+	mastersNum := len(self.Nodes()) / (self.ReplicasNum() + 1)
 
 	// The first step is to split instances by IP. This is useful as
 	// we'll try to allocate master nodes in different physical machines
@@ -127,7 +127,7 @@ func (self *RedisTrib) AllocSlots() {
 	// or at least a different virtual machine.
 	var ips map[string][](*ClusterNode)
 	ips = make(map[string][](*ClusterNode))
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		ips[node.Name()] = append(ips[node.Name()], node)
 	}
 

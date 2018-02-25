@@ -44,6 +44,10 @@ func (self *RedisTrib) AddNode(node *ClusterNode) {
 	self.nodes = append(self.nodes, node)
 }
 
+func (self *RedisTrib) Nodes() [](*ClusterNode) {
+	return self.nodes
+}
+
 func (self *RedisTrib) ResetNodes() {
 	self.nodes = []*ClusterNode{}
 }
@@ -79,7 +83,7 @@ func (self *RedisTrib) SetReplicasNum(replicasNum int) {
 
 // Return the node with the specified ID or Nil.
 func (self *RedisTrib) GetNodeByName(name string) (node *ClusterNode) {
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if strToLower(node.Name()) == strToLower(name) {
 			return node
 		}
@@ -95,7 +99,7 @@ func (self *RedisTrib) GetNodeByAbbreviatedName(name string) (n *ClusterNode) {
 	var candidates = []*ClusterNode{}
 
 	name = strings.ToLower(name)
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if node.Name()[0:length] == name {
 			candidates = append(candidates, node)
 		}
@@ -113,7 +117,7 @@ func (self *RedisTrib) GetNodeByAbbreviatedName(name string) (n *ClusterNode) {
 // number of replicas, one at random is returned.
 func (self *RedisTrib) GetMasterWithLeastReplicas() (node *ClusterNode) {
 	mnodes := [](*ClusterNode){}
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if node.HasFlag("master") {
 			mnodes = append(mnodes, node)
 		}
@@ -135,7 +139,7 @@ func (self *RedisTrib) GetMasterWithLeastReplicas() (node *ClusterNode) {
 }
 
 func (self *RedisTrib) CheckCluster(quiet bool) {
-	logrus.Printf(">>> Performing Cluster Check (using node %s).", self.nodes[0].String())
+	logrus.Printf(">>> Performing Cluster Check (using node %s).", self.Nodes()[0].String())
 
 	if !quiet {
 		self.ShowNodes()
@@ -150,7 +154,7 @@ func (self *RedisTrib) ShowClusterInfo() {
 	masters := 0
 	keys := 0
 
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if node.HasFlag("master") {
 			dbsize, err := node.Dbsize()
 			if err != nil {
@@ -169,7 +173,7 @@ func (self *RedisTrib) ShowClusterInfo() {
 }
 
 func (self *RedisTrib) ShowNodes() {
-	for _, n := range self.nodes {
+	for _, n := range self.Nodes() {
 		logrus.Println(n.InfoString())
 	}
 }
@@ -182,7 +186,7 @@ func (self *RedisTrib) ShowNodes() {
 func (self *RedisTrib) AssignConfigEpoch() {
 	configEpoch := 1
 
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		node.Call("CLUSTER", "set-config-epoch", configEpoch)
 		configEpoch += 1
 	}
@@ -199,7 +203,7 @@ func (self *RedisTrib) CheckConfigConsistency() {
 func (self *RedisTrib) isConfigConsistent() bool {
 	clean := true
 	oldSig := ""
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if len(oldSig) == 0 {
 			oldSig = node.GetConfigSignature()
 		} else {
@@ -271,7 +275,7 @@ func (self *RedisTrib) FixOpenSlot(slot string) {
 
 	var migrating [](*ClusterNode)
 	var importing [](*ClusterNode)
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if node.HasFlag("slave") {
 			continue
 		}
@@ -296,7 +300,7 @@ func (self *RedisTrib) FixOpenSlot(slot string) {
 	// number of keys, among the set of migrating / importing nodes.
 	if owner == nil {
 		logrus.Printf(">>> Nobody claims ownership, selecting an owner...")
-		owner = self.GetNodeWithMostKeysInSlot(self.nodes, slotnum)
+		owner = self.GetNodeWithMostKeysInSlot(self.Nodes(), slotnum)
 
 		// If we still don't have an owner, we can't fix it.
 		if owner == nil {
@@ -348,7 +352,7 @@ func (self *RedisTrib) FixOpenSlot(slot string) {
 func (self *RedisTrib) CoveredSlots() map[int]int {
 	slots := make(map[int]int)
 
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		for key, value := range node.Slots() {
 			slots[key] = value
 		}
@@ -388,7 +392,7 @@ func (self *RedisTrib) CheckOpenSlots() {
 	// add check open slots code.
 	var openSlots []string
 
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if len(node.Migrating()) > 0 {
 			keys := make([]string, len(node.Migrating()))
 			for k, _ := range node.Migrating() {
@@ -420,7 +424,7 @@ func (self *RedisTrib) CheckOpenSlots() {
 }
 
 func (self *RedisTrib) NodesWithKeysInSlot(slot int) (nodes [](*ClusterNode)) {
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if node.HasFlag("slave") {
 			continue
 		}
@@ -473,7 +477,7 @@ func (self *RedisTrib) FixSlotsCoverage() {
 		logrus.Printf("The folowing uncovered slots have no keys across the cluster: %s", result)
 		YesOrDie("Fix these slots by covering with a random node?")
 		for _, slot := range none {
-			node := self.nodes[rand.Intn(len(self.nodes))]
+			node := self.Nodes()[rand.Intn(len(self.Nodes()))]
 			logrus.Printf(">>> Covering slot %d with %s.", slot, node.String())
 			node.ClusterAddSlots(slot)
 		}
@@ -525,7 +529,7 @@ func (self *RedisTrib) FixSlotsCoverage() {
 func (self *RedisTrib) GetSlotOwners(slot int) [](*ClusterNode) {
 	var owners [](*ClusterNode)
 
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if node.HasFlag("slave") {
 			continue
 		}
@@ -573,7 +577,7 @@ func (self *RedisTrib) LoadClusterInfoFromNode(addr string) error {
 func (self *RedisTrib) PopulateNodesReplicasInfo() {
 	// Populate the replicas field using the replicate field of slave
 	// nodes.
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if node.Replicate() != "" {
 			master := self.GetNodeByName(node.Replicate())
 			if master == nil {
@@ -595,7 +599,7 @@ type InterfaceErrorCombo struct {
 type EachFunction func(*ClusterNode, interface{}, error, string, []interface{})
 
 func (self *RedisTrib) EachRunCommand(f EachFunction, cmd string, args ...interface{}) ([]*InterfaceErrorCombo, error) {
-	nodes := self.nodes
+	nodes := self.Nodes()
 
 	ies := make([]*InterfaceErrorCombo, len(nodes))
 
@@ -710,7 +714,7 @@ func (self *RedisTrib) MoveSlot(source *MovedNode, target *ClusterNode, o *MoveO
 
 	// Set the new node as the owner of the slot in all the known nodes.
 	if !o.Cold {
-		for _, n := range self.nodes {
+		for _, n := range self.Nodes() {
 			if n.HasFlag("slave") {
 				continue
 			}

@@ -195,7 +195,7 @@ func (self *RedisTrib) ReshardClusterCmd(context *cli.Context) error {
 		if found && str == "all" {
 			sources = sources[:0]
 
-			for _, node := range self.nodes {
+			for _, node := range self.Nodes() {
 				if node.Name() == target.Name() || node.HasFlag("slave") {
 					continue
 				}

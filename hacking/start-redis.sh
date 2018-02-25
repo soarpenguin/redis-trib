@@ -16,3 +16,4 @@ redis-server ${CURDIR}/config/redis-7379.conf &
 redis-server ${CURDIR}/config/redis-7380.conf &
 
 #./redis-trib create --replicas 1 127.0.0.1:6380 127.0.0.1:6379 127.0.0.1:6378 127.0.0.1:7380 127.0.0.1:7379 127.0.0.1:7378
+# for i in `ps aux | grep redis | grep -v grep | awk '{print $2}'`; do echo $i; kill $i; done

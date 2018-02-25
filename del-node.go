@@ -60,7 +60,7 @@ func (self *RedisTrib) DelNodeClusterCmd(context *cli.Context) error {
 	}
 	// Send CLUSTER FORGET to all the nodes but the node to remove
 	logrus.Printf(">>> Sending CLUSTER FORGET messages to the cluster...")
-	for _, n := range self.nodes {
+	for _, n := range self.Nodes() {
 		if n == nil || n == node {
 			continue
 		}

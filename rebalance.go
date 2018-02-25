@@ -111,7 +111,7 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	// Assign a weight to each node, and compute the total cluster weight.
 	totalWeight := 0
 	nodesInvolved := 0
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if node.HasFlag("master") {
 			if !useEmpty && len(node.Slots()) == 0 {
 				continue
@@ -138,7 +138,7 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 	// in order to be balanced.
 	threshold := context.Int("threshold")
 	thresholdReached := false
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if node.HasFlag("master") {
 			if node.Weight() == 0 {
 				continue
@@ -167,13 +167,13 @@ func (self *RedisTrib) RebalanceClusterCmd(context *cli.Context) error {
 		}
 	}
 	if !thresholdReached {
-		logrus.Printf("*** No rebalancing needed! All nodes are within the %f threshold.", threshold)
+		logrus.Printf("*** No rebalancing needed! All nodes are within the %d threshold.", threshold)
 		return nil
 	}
 
 	// Only consider nodes we want to change
 	var sn BalanceArray
-	for _, node := range self.nodes {
+	for _, node := range self.Nodes() {
 		if node.HasFlag("master") && node.Weight() != 0 {
 			sn = append(sn, node)
 		}
