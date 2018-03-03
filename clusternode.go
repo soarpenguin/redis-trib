@@ -64,13 +64,15 @@ type ClusterNode struct {
 }
 
 func NewClusterNode(addr string) (node *ClusterNode) {
-	host, port, err := net.SplitHostPort(addr)
-	if err != nil {
-		logrus.Fatalf("New cluster node error: %s!", err)
+	hostport := strings.Split(addr, "@")[0]
+	parts := strings.Split(hostport, ":")
+	if len(parts) < 2 {
+		logrus.Fatalf("New cluster node error: %s!", addr)
 		return nil
 	}
 
-	p, _ := strconv.ParseUint(port, 10, 0)
+	host := parts[0]
+	p, _ := strconv.ParseUint(parts[1], 10, 0)
 	node = &ClusterNode{
 		r: nil,
 		info: &NodeInfo{
