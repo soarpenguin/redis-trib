@@ -64,15 +64,28 @@ type ClusterNode struct {
 }
 
 func NewClusterNode(addr string) (node *ClusterNode) {
+	var host, port string
+	var err error
+
 	hostport := strings.Split(addr, "@")[0]
 	parts := strings.Split(hostport, ":")
 	if len(parts) < 2 {
-		logrus.Fatalf("New cluster node error: %s!", addr)
+		logrus.Fatalf("Invalid IP or Port (given as %s) - use IP:Port format", addr)
 		return nil
 	}
 
-	host := parts[0]
-	p, _ := strconv.ParseUint(parts[1], 10, 0)
+	if len(parts) > 2 {
+		// ipv6 in golang must like: "[fe80::1%lo0]:53", see detail in net/dial.go
+		host, port, err = net.SplitHostPort(hostport)
+		if err != nil {
+			logrus.Fatalf("New cluster node error: %s!", err)
+		}
+	} else {
+		host = parts[0]
+		port = parts[1]
+	}
+
+	p, _ := strconv.ParseUint(port, 10, 0)
 	node = &ClusterNode{
 		r: nil,
 		info: &NodeInfo{
@@ -185,11 +198,18 @@ func (self *ClusterNode) NodeString() string {
 }
 
 func (self *ClusterNode) Connect(abort bool) (err error) {
+	var addr string
+
 	if self.r != nil {
 		return nil
 	}
 
-	addr := fmt.Sprintf("%s:%d", self.info.host, self.info.port)
+	if strings.Contains(self.info.host, ":") {
+		// ipv6 in golang must like: "[fe80::1%lo0]:53", see detail in net/dial.go
+		addr = fmt.Sprintf("[%s]:%d", self.info.host, self.info.port)
+	} else {
+		addr = fmt.Sprintf("%s:%d", self.info.host, self.info.port)
+	}
 	//client, err := redis.DialTimeout("tcp", addr, 0, 1*time.Second, 1*time.Second)
 	client, err := redis.Dial("tcp", addr, redis.DialConnectTimeout(60*time.Second))
 	if err != nil {
