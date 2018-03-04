@@ -138,7 +138,7 @@ func (self *RedisTrib) AllocSlots() {
 	for !stop {
 		// Take one node from each IP until we run out of nodes
 		// across every IP.
-		for ip, nodes := range ips {
+		for name, nodes := range ips {
 			if len(nodes) == 0 {
 				// if this IP has no remaining nodes, check for termination
 				if len(interleaved) == nodeNum {
@@ -149,7 +149,7 @@ func (self *RedisTrib) AllocSlots() {
 			} else {
 				// else, move one node from this IP to 'interleaved'
 				interleaved = append(interleaved, nodes[0])
-				ips[ip] = nodes[1:]
+				ips[name] = nodes[1:]
 			}
 		}
 	}
