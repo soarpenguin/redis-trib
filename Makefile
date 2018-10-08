@@ -10,13 +10,27 @@ else
     VERSION = "unknown"
 endif
 
+#Replaces ":" (*nix), ";" (windows) with newline for easy parsing
+GOPATHS=$(shell echo ${GOPATH} | tr ":" "\n" | tr ";" "\n")
+
+# See Golang issue re: '-trimpath': https://github.com/golang/go/issues/13809
+GO_GCFLAGS=$(shell				\
+	set -- ${GOPATHS};			\
+	echo "-gcflags=-trimpath=$${1}";	\
+	)
+
+GO_ASMFLAGS=$(shell				\
+	set -- ${GOPATHS};			\
+	echo "-asmflags=-trimpath=$${1}";	\
+	)
+
 #export GOPATH := $(shell cd ./ && pwd)/vendor:$(GOPATH)
 
 ## Make bin for $MODULE.
 bin:
 	@echo "GOVERSION: ${HOST_GOLANG_VERSION}"
 	@echo "GOPATH:" $$GOPATH
-	go build -i -ldflags "-X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o ${MODULE} .
+	go build ${GO_GCFLAGS} ${GO_ASMFLAGS} -i -ldflags "-X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o ${MODULE} .
 
 ## Build debug trace for $MODULE.
 debug:
@@ -28,7 +42,7 @@ debug:
 static-bin:
 	@echo "GOVERSION:" ${HOST_GOLANG_VERSION}
 	@echo "GOPATH:" $$GOPATH
-	go build -i -ldflags "-w -extldflags -static -X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o ${MODULE} .
+	go build ${GO_GCFLAGS} ${GO_ASMFLAGS} -i -ldflags "-w -extldflags -static -X main.gitCommit=${COMMIT} -X main.version=${VERSION}" -o ${MODULE} .
 
 ## Get dep tool for managing dependencies for Go projects.
 dep:
